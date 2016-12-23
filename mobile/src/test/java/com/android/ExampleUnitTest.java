@@ -1,4 +1,4 @@
-package followit.followit;
+package com.android;
 
 import org.junit.Test;
 

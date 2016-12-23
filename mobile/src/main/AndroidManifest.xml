@@ -1,5 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="followit.followit">
+    package="com.android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Detect if the phone has OpenGL ES 2. If not, the user won't be able to download the app -->
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -7,7 +15,21 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
+        <activity android:name="com.followit.android.signInActivity">
+        </activity>
+        <activity android:name="com.followit.android.signUpActivity">
+        </activity>
+        <activity android:name="com.followit.android.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service android:name="com.followit.android.MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
