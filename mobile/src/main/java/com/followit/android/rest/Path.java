@@ -1,24 +1,26 @@
 package com.followit.android.rest;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
-
 import org.json.*;
-
-import com.followit.android.MainActivity;
-import com.followit.android.signInActivity;
 import com.loopj.android.http.*;
-
 import java.util.ArrayList;
-
 import cz.msebera.android.httpclient.Header;
 
 /**
  * Created by mperrin on 23/12/2016.
  */
 
-public class Path {
+public class Path extends AsyncTask<Void, Void, String> {
+
+    public interface RestCallback {
+        void onFinished(String result);
+    }
+
+    // This is the reference to the associated listener
+    private final RestCallback restCallback;
 
     private static final String TAG = Path.class.getSimpleName();
     private ArrayList<String> nodes;
@@ -26,7 +28,9 @@ public class Path {
     private String destination;
     private Context context;
 
-    public Path(Context c) {
+    public Path(Context c,RestCallback restCallback)
+    {
+        this.restCallback = restCallback;
         context = c;
     }
 
@@ -37,7 +41,6 @@ public class Path {
     public void setNodes(ArrayList<String> nodes) {
         this.nodes = nodes;
     }
-
 
     public String getSource() {
         return source;
@@ -55,6 +58,11 @@ public class Path {
         this.destination = destination;
     }
 
+    @Override
+    protected String doInBackground(Void... params) {
+        return getPath((RequestParams)params);
+    }
+
     public void getPath(RequestParams params) throws JSONException {
         RestClient.post("path", params, new JsonHttpResponseHandler() {
             @Override
@@ -66,10 +74,11 @@ public class Path {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
                 // Pull out the first event on the public timeline
-                Log.d(TAG, "" + response.length());
+                nodes = new ArrayList<String>();
+                Log.d(TAG, "length" + response.length());
                 for (int i = 0; i < response.length(); i++) {
                     try {
-                        nodes.add(response[i].toString());
+                        nodes.add(response.get(i).toString());
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -78,7 +87,12 @@ public class Path {
                 if (nodes != null)
                     Toast.makeText(context, nodes.toString(), Toast.LENGTH_SHORT).show();
             }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
+                Log.d(TAG, "ERROR: " + errorResponse.toString());
+            }
+
         });
     }
-
 }
