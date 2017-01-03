@@ -3,6 +3,8 @@ package com.followit.android.rest;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
@@ -18,7 +20,6 @@ import io.socket.emitter.Emitter;
  */
 
 public class Path {
-
 
     // This is the reference to the associated listener
     private SocketCallBack socketCallBack;
@@ -55,13 +56,22 @@ public class Path {
 
                 ArrayList<String> nodes = new ArrayList<String>();
                 Log.d(TAG, "call: JSONOBJECT" + response.toString());
+                try {
+                    JSONArray a = (JSONArray) response.get("map");
+                    for (int i = 0; i < a.length(); i++) {
+                        nodes.add((String) a.get(i));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 socketCallBack.onPushNotification(nodes);
             }
 
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
 
             @Override
-            public void call(Object... args) {}
+            public void call(Object... args) {
+            }
 
         });
         mSocket.connect();

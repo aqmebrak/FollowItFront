@@ -28,4 +28,15 @@
         android:layout_marginStart="23dp"
         android:layout_marginTop="93dp"
         android:id="@+id/pathResultTextField" />
+
+    <ProgressBar
+        style="@android:style/Widget.Material.Light.ProgressBar.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="44dp"
+        android:id="@+id/pb"
+        tools:visibility="invisible"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>
