@@ -31,17 +31,12 @@ dependencies {
     wearApp project(':wear')
     //
     compile 'com.android.support:appcompat-v7:24.2.1'
-    //
-    compile 'com.google.android.gms:play-services:10.0.1'
     // JSON parsing library
     compile 'com.google.code.gson:gson:2.6.2'
-    //REST client library
-    compile 'com.loopj.android:android-async-http:1.4.9'
-    //SOCKET.IO
-    compile 'com.github.nkzawa:socket.io-client:0.3.0'
 
+    compile ('io.socket:socket.io-client:0.8.3') {
+        // excluding org.json which is provided by Android
+        exclude group: 'org.json', module: 'json'
+    }
     testCompile 'junit:junit:4.12'
 }
-
-
-apply plugin: 'com.google.gms.google-services'

@@ -1,45 +1,24 @@
 package com.followit.android;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.R;
 import com.followit.android.rest.Path;
-import com.followit.android.rest.RestClient;
-import com.github.nkzawa.emitter.Emitter;
-import com.github.nkzawa.socketio.client.IO;
-import com.github.nkzawa.socketio.client.Socket;
-import com.loopj.android.http.RequestParams;
+import com.followit.android.rest.SocketCallBack;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private Button getPathButton;
-    private Path path = new Path(MainActivity.this);
-    private Socket mSocket;
-
-    {
-        try {
-            mSocket = IO.socket("https://followit-backend.herokuapp.com/");
-        } catch (URISyntaxException e) {
-            Log.d(TAG, "Couldn't socket" + e);
-        }
-    }
-
-    private EditText mInputMessageView;
+    private Path path;
 
 
     @Override
@@ -47,69 +26,34 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //mSocket.connect();
-        //mSocket.on("new message", onNewMessage);
+        path = new Path(MainActivity.this, new SocketCallBack() {
+            @Override
+            public void onPushNotification(ArrayList<String> nodes) {
+                if (nodes != null)
+                    Toast.makeText(MainActivity.this, nodes.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
-        getPathButton = (Button) findViewById(R.id.getPathButton);
+        Button getPathButton = (Button) findViewById(R.id.getPathButton);
 
         getPathButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 // Perform action on click
-                TextView tv = (TextView) findViewById(R.id.pathResultTextField);
 
-                RequestParams params = new RequestParams();
-                params.put("source", "a");
-                params.put("destination", "f");
+                JSONObject params = new JSONObject();
                 try {
-                    path.getPath(params);
+                    params.put("source", "a");
+                    params.put("destination", "f");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                while (!path.isResponded()) {
-                }
-                Log.d(TAG, "usResonded : " + path.isResponded());
-                tv.setText("nooooodes");
-                tv.setVisibility(View.VISIBLE);
-
-                //attemptSend();
+                path.askForPath(params);
             }
         });
     }
 
-    private void attemptSend() {
-        String message = mInputMessageView.getText().toString().trim();
-        if (TextUtils.isEmpty(message)) {
-            return;
-        }
-        mInputMessageView.setText("HELLO");
-        mSocket.emit("new message", message);
-    }
-
-    private Emitter.Listener onNewMessage = new Emitter.Listener() {
-        @Override
-        public void call(final Object... args) {
-            JSONObject data = (JSONObject) args[0];
-
-            int numUsers;
-            try {
-                numUsers = data.getInt("numUsers");
-            } catch (JSONException e) {
-                return;
-            }
-
-            Intent intent = new Intent();
-            // intent.putExtra("username", mUsername);
-            intent.putExtra("numUsers", numUsers);
-            setResult(RESULT_OK, intent);
-            finish();
-        }
-    };
-
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        mSocket.disconnect();
-        mSocket.off("new message", onNewMessage);
     }
 }
