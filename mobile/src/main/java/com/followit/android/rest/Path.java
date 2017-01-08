@@ -74,6 +74,7 @@ public class Path {
             }
 
         });
+        mSocket.connect();
     }
 
     public ArrayList<String> getNodes() {
@@ -103,11 +104,4 @@ public class Path {
     public void askForPath(JSONObject param) {
         mSocket.emit("askPath", param);
     }
-
-    public void connect(JSONObject param){
-        if(param.has("username")){
-            mSocket.connect();
-        }
-    }
-
 }

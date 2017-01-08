@@ -64,9 +64,9 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView txt = (TextView) findViewById(R.id.pathResultTextField);
-                txt.setText(nodes.toString());
-                txt.setVisibility(View.VISIBLE);
+                Button Btntxt = (Button) findViewById(R.id.result_button);
+                Btntxt.setText(Btntxt.getText() + nodes.toString());
+                Btntxt.setVisibility(View.VISIBLE);
 
                 //display button again
                 Button getPathButton = (Button) findViewById(R.id.getPathButton);
