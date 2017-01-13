@@ -23,7 +23,7 @@ public class MyApplication extends Application implements
 
     @Override
     public void onCreate() {
-        super.onCreate();
+        /*super.onCreate();
 
         beaconManager = new BeaconManager(getApplicationContext());
 
@@ -31,7 +31,7 @@ public class MyApplication extends Application implements
         beaconManager.connect(this);
 
         // Set enter and exit listener
-        beaconManager.setMonitoringListener(this);
+        beaconManager.setMonitoringListener(this);*/
     }
 
     public void showNotification(String title, String message) {
