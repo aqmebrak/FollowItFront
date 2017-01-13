@@ -8,5 +8,5 @@ import java.util.ArrayList;
 
 public interface SocketCallBack {
     void onPushNotification( ArrayList<String> nodes);
-
+    void onBroadcastNotification(String message);
 }

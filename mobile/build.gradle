@@ -4,7 +4,6 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        multiDexEnabled  true
         applicationId "followit.followit"
         minSdkVersion 21
         targetSdkVersion 25
@@ -35,6 +34,7 @@ dependencies {
     // JSON parsing library
     compile 'com.google.code.gson:gson:2.6.2'
 
+    compile('io.socket:socket.io-client:0.8.3') {
     compile 'com.google.android.gms:play-services:10.0.1'
 
     compile ('io.socket:socket.io-client:0.8.3') {

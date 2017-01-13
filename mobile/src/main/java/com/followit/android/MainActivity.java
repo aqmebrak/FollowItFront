@@ -2,17 +2,18 @@ package com.followit.android;
 
 import android.app.NotificationManager;
 import android.content.Context;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.R;
 import com.followit.android.rest.Path;
@@ -123,15 +124,36 @@ public class MainActivity extends AppCompatActivity implements
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                TextView txt = (TextView) findViewById(R.id.pathResultTextField);
-                txt.setText(nodes.toString());
-                txt.setVisibility(View.VISIBLE);
+                TextView t = (TextView) findViewById(R.id.result_tv);
+                t.setText(nodes.toString());
+                t.setFontFeatureSettings();
+                t.setVisibility(View.VISIBLE);
 
                 //display button again
                 Button getPathButton = (Button) findViewById(R.id.getPathButton);
                 getPathButton.setVisibility(View.VISIBLE);
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    @Override
+    public void onBroadcastNotification(final String message) {
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                NotificationCompat.Builder mBuilder =
+                        (NotificationCompat.Builder) new NotificationCompat.Builder(MainActivity.this)
+                                .setSmallIcon(R.drawable.ic_stat_name)
+                                .setContentTitle("Map Update")
+                                .setContentText("Map has been updated, synchronize your navigation steps");
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                // notificationID allows you to update the notification later on.
+                mNotificationManager.notify(1, mBuilder.build());
+                //TODO: ADD action on notification click
+
             }
         });
     }
