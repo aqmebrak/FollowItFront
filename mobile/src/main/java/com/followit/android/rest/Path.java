@@ -73,6 +73,15 @@ public class Path {
             public void call(Object... args) {
             }
 
+        }).on("notif", new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                Log.d(TAG,"NOTIFICATION");
+                JSONObject response = (JSONObject) args[0];
+                socketCallBack.onBroadcastNotification(response.toString());
+            }
+
         });
         mSocket.connect();
     }
