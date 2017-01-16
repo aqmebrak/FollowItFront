@@ -4,11 +4,12 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        applicationId "followit.followit"
+        applicationId "com.followit.android"
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        multiDexEnabled  true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -33,13 +34,18 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.1.0'
     // JSON parsing library
     compile 'com.google.code.gson:gson:2.6.2'
-
-    compile('io.socket:socket.io-client:0.8.3') {
     compile 'com.google.android.gms:play-services:10.0.1'
 
     compile ('io.socket:socket.io-client:0.8.3') {
         // excluding org.json which is provided by Android
         exclude group: 'org.json', module: 'json'
     }
+
+    // add the following line, and replace "0.11.1" with the latest version
+    // of Estimote Android SDK; you'll find the latest version number on:
+    //   https://github.com/Estimote/Android-SDK/releases
+    compile 'com.estimote:sdk:0.15.0@aar'
+
+
     testCompile 'junit:junit:4.12'
 }

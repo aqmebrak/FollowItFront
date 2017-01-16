@@ -14,11 +14,6 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 
-
-/**
- * Created by mperrin on 23/12/2016.
- */
-
 public class Path {
 
     // This is the reference to the associated listener
@@ -29,32 +24,30 @@ public class Path {
     private String source;
     private String destination;
     private Context context;
-    private Socket mSocket;
+    private Socket socket;
 
 
     public Path(Context c, final SocketCallBack socketCallBack) {
         this.socketCallBack = socketCallBack;
         context = c;
-        {
-            try {
-                mSocket = IO.socket("https://followit-backend.herokuapp.com/");
-            } catch (URISyntaxException e) {
-                Log.d(TAG, "Couldn't socket" + e);
-            }
+        try {
+            socket = IO.socket("https://followit-backend.herokuapp.com/");
+        } catch (URISyntaxException e) {
+            Log.d(TAG, "Couldn't socket" + e);
         }
 
-        mSocket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+        socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             @Override
             public void call(Object... args) {
-
             }
+
         }).on("path", new Emitter.Listener() {
 
             @Override
             public void call(Object... args) {
                 JSONObject response = (JSONObject) args[0];
 
-                ArrayList<String> nodes = new ArrayList<String>();
+                ArrayList<String> nodes = new ArrayList<>();
                 Log.d(TAG, "call: JSONOBJECT" + response.toString());
                 try {
                     JSONArray a = (JSONArray) response.get("map");
@@ -64,7 +57,7 @@ public class Path {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                socketCallBack.onPushNotification(nodes);
+                socketCallBack.onPathFetched(nodes);
             }
 
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -77,13 +70,13 @@ public class Path {
 
             @Override
             public void call(Object... args) {
-                Log.d(TAG,"NOTIFICATION");
+                Log.d(TAG, "NOTIFICATION");
                 JSONObject response = (JSONObject) args[0];
                 socketCallBack.onBroadcastNotification(response.toString());
             }
 
         });
-        mSocket.connect();
+        socket.connect();
     }
 
     public ArrayList<String> getNodes() {
@@ -111,6 +104,6 @@ public class Path {
     }
 
     public void askForPath(JSONObject param) {
-        mSocket.emit("askPath", param);
+        socket.emit("askPath", param);
     }
 }

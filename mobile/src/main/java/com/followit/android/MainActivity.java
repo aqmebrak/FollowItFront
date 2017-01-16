@@ -1,27 +1,31 @@
 package com.followit.android;
 
+
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.android.R;
+import com.estimote.sdk.SystemRequirementsChecker;
 import com.followit.android.rest.Path;
 import com.followit.android.rest.SocketCallBack;
+import com.followit.android.service.BeaconMonitoringService;
+import com.followit.android.service.BroadcastResponseReceiver;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
@@ -36,16 +40,19 @@ public class MainActivity extends AppCompatActivity implements
         SocketCallBack,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        View.OnClickListener, ResultCallback<DataApi.DataItemResult> {
+        View.OnClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private Path path;
     private Button getPathButton;
 
-    private int count = 0;
-    private GoogleApiClient googleClient;
+    private GoogleApiClient googleApiClient;
     private PutDataMapRequest mapRequest;
     private PutDataRequest request;
+
+    // Service variables
+    private IntentFilter filter;
+    private BroadcastReceiver broadcastReceiver = new BroadcastResponseReceiver();
 
     /***********************************/
     /**          LIFECYCLES           **/
@@ -60,35 +67,36 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.pb).setVisibility(View.GONE);
 
         // Build a new GoogleApiClient for the Wearable API
-        googleClient = new GoogleApiClient.Builder(this)
+        googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-        googleClient.connect();
+        googleApiClient.connect();
 
         path = new Path(MainActivity.this, this);
         getPathButton = (Button) findViewById(R.id.getPathButton);
 
         // Set listeners
         getPathButton.setOnClickListener(this);
-        findViewById(R.id.increment).setOnClickListener(this);
+
+        // Service part
+        startService(new Intent(this, BeaconMonitoringService.class));
+        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
     }
 
-    // Connect to the data layer when the Activity starts
     @Override
-    protected void onStart() {
-        super.onStart();
-        googleClient.connect();
+    protected void onResume() {
+        super.onResume();
+        googleApiClient.connect();
+        SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
-    // Disconnect from the data layer when the Activity stops
     @Override
-    protected void onStop() {
-        if (null != googleClient && googleClient.isConnected()) {
-            googleClient.disconnect();
-        }
-        super.onStop();
+    protected void onPause() {
+        super.onPause();
+        googleApiClient.disconnect();
     }
 
     /***********************************/
@@ -105,28 +113,25 @@ public class MainActivity extends AppCompatActivity implements
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.VISIBLE);
                 break;
-            case R.id.increment:
-                Log.d(TAG,"CLICK");
-                PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/count");
-                putDataMapReq.getDataMap().putInt("COUNT_EXAMPLE", count++);
-                PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-                PendingResult<DataApi.DataItemResult> pendingResult =
-                        Wearable.DataApi.putDataItem(googleClient, putDataReq);
-                pendingResult.setResultCallback(this);
-                break;
         }
     }
 
     @Override
-    public void onPushNotification(final ArrayList<String> nodes) {
+    public void onPathFetched(final ArrayList<String> nodes) {
         Log.d(TAG, "NOTIF: JSONOBJECT" + nodes.toString());
+
+        // Todo: Tableau d'indications à mettre
+        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/indications");
+        putDataMapReq.getDataMap().putString("indications", "TABLEAU");
+        PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
+        PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 TextView t = (TextView) findViewById(R.id.result_tv);
                 t.setText(nodes.toString());
-                t.setFontFeatureSettings();
+                //t.setFontFeatureSettings();
                 t.setVisibility(View.VISIBLE);
 
                 //display button again
@@ -140,15 +145,14 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBroadcastNotification(final String message) {
-        this.runOnUiThread(new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
 
-                NotificationCompat.Builder mBuilder =
-                        (NotificationCompat.Builder) new NotificationCompat.Builder(MainActivity.this)
-                                .setSmallIcon(R.drawable.ic_stat_name)
-                                .setContentTitle("Map Update")
-                                .setContentText("Map has been updated, synchronize your navigation steps");
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                        .setSmallIcon(R.drawable.ic_stat_name)
+                        .setContentTitle("Map Update")
+                        .setContentText("Map has been updated, synchronize your navigation steps");
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 // notificationID allows you to update the notification later on.
                 mNotificationManager.notify(1, mBuilder.build());
@@ -156,11 +160,6 @@ public class MainActivity extends AppCompatActivity implements
 
             }
         });
-    }
-
-    @Override
-    public void onResult(@NonNull DataApi.DataItemResult result) {
-        Log.d(TAG,"status : "+ result.getStatus());
     }
 
     @Override
