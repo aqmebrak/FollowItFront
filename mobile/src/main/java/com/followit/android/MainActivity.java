@@ -14,8 +14,10 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.estimote.sdk.SystemRequirementsChecker;
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private Path path;
+    private ArrayList<String> shopList;
     private Button getPathButton;
 
     private GoogleApiClient googleApiClient;
@@ -77,6 +80,8 @@ public class MainActivity extends AppCompatActivity implements
         path = new Path(MainActivity.this, this);
         getPathButton = (Button) findViewById(R.id.getPathButton);
 
+        //GET SHOP LIST
+        path.getShopList();
         // Set listeners
         getPathButton.setOnClickListener(this);
 
@@ -84,6 +89,11 @@ public class MainActivity extends AppCompatActivity implements
         startService(new Intent(this, BeaconMonitoringService.class));
         filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+
+
+        //POURQUOI ? SINON CA AFFICHE QUAND MEME....
+        ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
+        pb.setVisibility(View.GONE);
     }
 
     @Override
@@ -139,6 +149,23 @@ public class MainActivity extends AppCompatActivity implements
                 getPathButton.setVisibility(View.VISIBLE);
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    @Override
+    public void shopListNotification(final ArrayList<String> list) {
+        Log.d(TAG, "NOTIF: JSONOBJECT" + list.toString());
+
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_spinner_item, list);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+                Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
+                listSpinner.setAdapter(adapter);
             }
         });
     }

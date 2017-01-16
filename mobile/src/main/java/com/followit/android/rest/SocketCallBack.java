@@ -5,4 +5,5 @@ import java.util.ArrayList;
 public interface SocketCallBack {
     void onPathFetched(ArrayList<String> nodes);
     void onBroadcastNotification(String message);
+    void shopListNotification(ArrayList<String> list);
 }

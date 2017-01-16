@@ -47,8 +47,8 @@ public class Path {
             public void call(Object... args) {
                 JSONObject response = (JSONObject) args[0];
 
-                ArrayList<String> nodes = new ArrayList<>();
-                Log.d(TAG, "call: JSONOBJECT" + response.toString());
+                ArrayList<String> nodes = new ArrayList<String>();
+                Log.d(TAG, "call: PATH" + response.toString());
                 try {
                     JSONArray a = (JSONArray) response.get("map");
                     for (int i = 0; i < a.length(); i++) {
@@ -58,6 +58,25 @@ public class Path {
                     e.printStackTrace();
                 }
                 socketCallBack.onPathFetched(nodes);
+            }
+
+        }).on("shopList", new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                JSONObject response = (JSONObject) args[0];
+
+                ArrayList<String> list = new ArrayList<String>();
+                Log.d(TAG, "call: SHOPLIST" + response.toString());
+                try {
+                    JSONArray a = (JSONArray) response.get("shops");
+                    for (int i = 0; i < a.length(); i++) {
+                        list.add((String) a.get(i));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                socketCallBack.shopListNotification(list);
             }
 
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -105,5 +124,9 @@ public class Path {
 
     public void askForPath(JSONObject param) {
         socket.emit("askPath", param);
+    }
+
+    public void getShopList() {
+        socket.emit("getShops");
     }
 }
