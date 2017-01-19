@@ -3,54 +3,48 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:weightSum="1"
     tools:context="com.followit.android.MainActivity">
 
     <Button
-        android:id="@+id/result_button"
+        android:id="@+id/findSelected"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Result:" />
+        android:text="Find countries that are Selected" />
+
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="312dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_above="@+id/getPathButton"
+        android:id="@+id/poi_list" />
 
     <TextView
         android:text="TextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/result_tv" />
+        android:id="@+id/result_tv"
+        android:layout_above="@+id/pb"
+        android:layout_alignParentStart="true" />
 
-    <Spinner
-        android:id="@+id/select_shops_spinner"
+    <Button
+        android:id="@+id/getPathButton"
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:layout_marginTop="17dp" />
+        android:layout_height="38dp"
+        android:elevation="0dp"
+        android:text="Get Path"
+        android:layout_alignParentStart="true" />
 
-
-    <RelativeLayout
+    <ProgressBar
+        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Small"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:id="@+id/pb"
+        android:layout_centerVertical="true"
+        android:layout_alignParentStart="true" />
 
-        <ProgressBar
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/pb"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="102dp" />
-
-        <Button
-            android:id="@+id/getPathButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.06"
-            android:elevation="0dp"
-            android:text="Get Path"
-            android:layout_alignTop="@+id/pb"
-            android:layout_alignParentStart="true"
-            android:layout_marginTop="14dp" />
-
-    </RelativeLayout>
 
 </LinearLayout>

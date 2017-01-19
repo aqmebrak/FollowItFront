@@ -52,7 +52,8 @@ public class Path {
                 try {
                     JSONArray a = (JSONArray) response.get("map");
                     for (int i = 0; i < a.length(); i++) {
-                        nodes.add((String) a.get(i));
+                        JSONObject node = (JSONObject) a.get(i);
+                        nodes.add(node.get("node").toString());
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -60,23 +61,23 @@ public class Path {
                 socketCallBack.onPathFetched(nodes);
             }
 
-        }).on("shopList", new Emitter.Listener() {
+        }).on("POIList", new Emitter.Listener() {
 
             @Override
             public void call(Object... args) {
                 JSONObject response = (JSONObject) args[0];
 
                 ArrayList<String> list = new ArrayList<String>();
-                Log.d(TAG, "call: SHOPLIST" + response.toString());
+                Log.d(TAG, "call: POI LIST" + response.toString());
                 try {
-                    JSONArray a = (JSONArray) response.get("shops");
+                    JSONArray a = (JSONArray) response.get("poi");
                     for (int i = 0; i < a.length(); i++) {
                         list.add((String) a.get(i));
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                socketCallBack.shopListNotification(list);
+                socketCallBack.POIListNotification(list);
             }
 
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -126,7 +127,7 @@ public class Path {
         socket.emit("askPath", param);
     }
 
-    public void getShopList() {
-        socket.emit("getShops");
+    public void getPOIList() {
+        socket.emit("getPOI");
     }
 }

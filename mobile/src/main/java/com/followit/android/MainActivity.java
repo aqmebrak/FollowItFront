@@ -13,12 +13,17 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.estimote.sdk.SystemRequirementsChecker;
 import com.followit.android.rest.Path;
@@ -46,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private Path path;
-    private ArrayList<String> shopList;
     private Button getPathButton;
 
     private GoogleApiClient googleApiClient;
@@ -56,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements
     // Service variables
     private IntentFilter filter;
     private BroadcastReceiver broadcastReceiver = new BroadcastResponseReceiver();
+
+
+    MyCustomAdapter dataAdapter = null;
 
     /***********************************/
     /**          LIFECYCLES           **/
@@ -70,31 +77,150 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.pb).setVisibility(View.GONE);
 
         // Build a new GoogleApiClient for the Wearable API
-        googleApiClient = new GoogleApiClient.Builder(this)
+        /*googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                .build();
-        googleApiClient.connect();
+                .build();*/
+       // googleApiClient.connect();
 
         path = new Path(MainActivity.this, this);
         getPathButton = (Button) findViewById(R.id.getPathButton);
 
-        //GET SHOP LIST
-        path.getShopList();
+        //GET POI LIST
+        path.getPOIList();
         // Set listeners
         getPathButton.setOnClickListener(this);
 
         // Service part
-        startService(new Intent(this, BeaconMonitoringService.class));
-        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
-
+        //startService(new Intent(this, BeaconMonitoringService.class));
+        //filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
+        //LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
         //POURQUOI ? SINON CA AFFICHE QUAND MEME....
         ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
         pb.setVisibility(View.GONE);
+
+
+        /***
+         *
+         * LIST VIEW CHECKBOX
+         *
+         */
+
+        //Generate list View from ArrayList
+        displayListView();
+
+        checkButtonClick();
     }
+
+    private void displayListView() {
+
+        //Array list of countries
+        ArrayList<POI> POIList = new ArrayList<POI>();
+
+
+        //create an ArrayAdaptar from the String Array
+        dataAdapter = new MyCustomAdapter(this,
+                R.layout.country_info, POIList);
+        ListView listView = (ListView) findViewById(R.id.poi_list);
+        // Assign adapter to ListView
+        listView.setAdapter(dataAdapter);
+
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                // When clicked, show a toast with the TextView text
+                POI POI = (POI) parent.getItemAtPosition(position);
+                Toast.makeText(getApplicationContext(),
+                        "Clicked on Row: " + POI.getName(),
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+
+    }
+
+    private class MyCustomAdapter extends ArrayAdapter<POI> {
+
+        private ArrayList<POI> POIList;
+
+        public MyCustomAdapter(Context context, int textViewResourceId,
+                               ArrayList<POI> POIList) {
+            super(context, textViewResourceId, POIList);
+            this.POIList = new ArrayList<POI>();
+            this.POIList.addAll(POIList);
+        }
+
+        private class ViewHolder {
+            CheckBox name;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            ViewHolder holder = null;
+            Log.v("ConvertView", String.valueOf(position));
+
+            if (convertView == null) {
+                LayoutInflater vi = (LayoutInflater) getSystemService(
+                        Context.LAYOUT_INFLATER_SERVICE);
+                convertView = vi.inflate(R.layout.country_info, null);
+
+                holder = new ViewHolder();
+                holder.name = (CheckBox) convertView.findViewById(R.id.checkBox1);
+                convertView.setTag(holder);
+
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+
+            POI POI = POIList.get(position);
+            holder.name.setText(POI.getName());
+            holder.name.setChecked(POI.isSelected());
+            holder.name.setTag(POI);
+
+            return convertView;
+
+        }
+
+    }
+
+    private void checkButtonClick() {
+
+        Button myButton = (Button) findViewById(R.id.findSelected);
+        myButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+
+                StringBuffer responseText = new StringBuffer();
+                responseText.append("The following were selected...\n");
+
+                ArrayList<POI> POIList = dataAdapter.POIList;
+                for (int i = 0; i < POIList.size(); i++) {
+                    POI POI = POIList.get(i);
+                    if (POI.isSelected()) {
+                        responseText.append("\n" + POI.getName());
+                    }
+                }
+
+                Toast.makeText(getApplicationContext(),
+                        responseText, Toast.LENGTH_LONG).show();
+
+            }
+        });
+
+    }
+
+    /**
+     *
+     *
+     *
+     *
+     *
+     *
+     */
 
     @Override
     protected void onResume() {
@@ -154,18 +280,13 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void shopListNotification(final ArrayList<String> list) {
-        Log.d(TAG, "NOTIF: JSONOBJECT" + list.toString());
+    public void POIListNotification(final ArrayList<String> list) {
+        Log.d(TAG, "NOTIF: POI LIST" + list.toString());
 
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
 
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_spinner_item, list);
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-                Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
-                listSpinner.setAdapter(adapter);
             }
         });
     }
