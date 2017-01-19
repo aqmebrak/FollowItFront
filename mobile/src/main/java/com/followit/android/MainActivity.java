@@ -38,9 +38,11 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements
     private GoogleApiClient googleApiClient;
     private PutDataMapRequest mapRequest;
     private PutDataRequest request;
+    private static ArrayList<String> instructions;
 
     // Service variables
     private IntentFilter filter;
@@ -77,12 +80,12 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.pb).setVisibility(View.GONE);
 
         // Build a new GoogleApiClient for the Wearable API
-        /*googleApiClient = new GoogleApiClient.Builder(this)
+        googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
-                .build();*/
-       // googleApiClient.connect();
+                .build();
+        googleApiClient.connect();
 
         path = new Path(MainActivity.this, this);
         getPathButton = (Button) findViewById(R.id.getPathButton);
@@ -253,20 +256,24 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onPathFetched(final ArrayList<String> nodes) {
-        Log.d(TAG, "NOTIF: JSONOBJECT" + nodes.toString());
+    public void onPathFetched(final ArrayList<Node> path) throws JSONException {
+        instructions = new ArrayList<>();
+
+        for (int i=0; i<path.size(); i++) {
+            instructions.add(path.get(i).getInstruction());
+        }
 
         // Todo: Tableau d'indications à mettre
-        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/indications");
-        putDataMapReq.getDataMap().putString("indications", "TABLEAU");
-        PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-        PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
+        //PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/indications");
+        //putDataMapReq.getDataMap().putString("indications", "TABLEAU");
+        //PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
+        //PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 TextView t = (TextView) findViewById(R.id.result_tv);
-                t.setText(nodes.toString());
+                t.setText(path.toString());
                 //t.setFontFeatureSettings();
                 t.setVisibility(View.VISIBLE);
 

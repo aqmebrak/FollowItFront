@@ -3,10 +3,13 @@ package com.followit.android.rest;
 import android.content.Context;
 import android.util.Log;
 
+import com.followit.android.Node;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
@@ -45,20 +48,7 @@ public class Path {
 
             @Override
             public void call(Object... args) {
-                JSONObject response = (JSONObject) args[0];
-
-                ArrayList<String> nodes = new ArrayList<String>();
-                Log.d(TAG, "call: PATH" + response.toString());
-                try {
-                    JSONArray a = (JSONArray) response.get("map");
-                    for (int i = 0; i < a.length(); i++) {
-                        JSONObject node = (JSONObject) a.get(i);
-                        nodes.add(node.get("node").toString());
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                socketCallBack.onPathFetched(nodes);
+                buildPathWithNodes(args);
             }
 
         }).on("POIList", new Emitter.Listener() {
@@ -129,5 +119,34 @@ public class Path {
 
     public void getPOIList() {
         socket.emit("getPOI");
+    }
+
+
+    private void buildPathWithNodes(Object... args) {
+        String node_name, node_instruction;
+        ArrayList<String> node_poi;
+        ArrayList<Node> result = new ArrayList<>();
+
+        try {
+            JSONObject response = (JSONObject) args[0];
+            JSONArray path = response.getJSONArray("map");
+
+            // create Node objects
+            for (int i = 0; i < path.length(); i++) {
+                node_name = path.getJSONObject(i).getString("node");
+
+                // create Node's node_poi
+                node_poi = new ArrayList<>();
+                for (int j = 0; j < path.getJSONObject(i).getJSONArray("POIList").length(); j++)
+                    node_poi.add((String) path.getJSONObject(i).getJSONArray("POIList").get(j));
+                node_instruction = path.getJSONObject(i).getString("instruction");
+                result.add(new Node(node_name, node_poi, node_instruction));
+            }
+
+            Log.d(TAG,"result : "+result);
+            socketCallBack.onPathFetched(result);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }
