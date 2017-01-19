@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "439971692762",
+    "firebase_url": "https://followitfront.firebaseio.com",
+    "project_id": "followitfront",
+    "storage_bucket": "followitfront.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:439971692762:android:7adf332353cf0561",
+        "android_client_info": {
+          "package_name": "followit.followit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "439971692762-3oo3i0e2iu73jlqqj7egjdrihus9t0hs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "followit.followit",
+            "certificate_hash": "8BDBCE79BA2C138E589BFAC2113BEDA47151A0DF"
+          }
+        },
+        {
+          "client_id": "439971692762-fpoctpjkkdmuf1krjrm64irdhrs4cjmf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXg1aT-73FSOHOjleXw9RTDCiMyFbkGzQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "439971692762-fpoctpjkkdmuf1krjrm64irdhrs4cjmf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
