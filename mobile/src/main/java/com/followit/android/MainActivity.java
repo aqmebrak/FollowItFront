@@ -96,32 +96,162 @@ public class MainActivity extends AppCompatActivity implements
         getPathButton.setOnClickListener(this);
 
         // Service part
-        //startService(new Intent(this, BeaconMonitoringService.class));
-        //filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
-        //LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+        startService(new Intent(this, BeaconMonitoringService.class));
+        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
         //POURQUOI ? SINON CA AFFICHE QUAND MEME....
         ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
         pb.setVisibility(View.GONE);
-
-
-        /***
-         *
-         * LIST VIEW CHECKBOX
-         *
-         */
-
-        //Generate list View from ArrayList
-        displayListView();
-
-        checkButtonClick();
     }
 
-    private void displayListView() {
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        googleApiClient.connect();
+        SystemRequirementsChecker.checkWithDefaultDialogs(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        googleApiClient.disconnect();
+    }
+
+    /***********************************/
+    /**          LISTENERS            **/
+    /***********************************/
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.getPathButton:
+                getPath();
+                //display progressbar
+                getPathButton.setVisibility(View.GONE);
+                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
+                pb.setVisibility(View.VISIBLE);
+                break;
+        }
+    }
+
+    @Override
+    public void onPathFetched(final ArrayList<Node> path) throws JSONException {
+        instructions = new ArrayList<>();
+
+        for (int i=0; i<path.size(); i++) {
+            instructions.add(path.get(i).getInstruction());
+        }
+
+        // Todo: Tableau d'indications à mettre
+        //PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/indications");
+        //putDataMapReq.getDataMap().putString("indications", "TABLEAU");
+        //PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
+        //PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
+
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView t = (TextView) findViewById(R.id.result_tv);
+                t.setText(path.toString());
+                //t.setFontFeatureSettings();
+                t.setVisibility(View.VISIBLE);
+
+                //display button again
+                Button getPathButton = (Button) findViewById(R.id.getPathButton);
+                getPathButton.setVisibility(View.VISIBLE);
+                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
+                pb.setVisibility(View.GONE);
+            }
+        });
+
+        /*
+         * SWITCHER VUE
+         */
+        Intent intent = new Intent(getBaseContext(), NavigationActivity.class);
+        intent.putExtra("nodeList", path);
+        startActivity(intent);
+    }
+
+    @Override
+    public void POIListNotification(final ArrayList<String> list) {
+        Log.d(TAG, "NOTIF: POI LIST" + list.toString());
+
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //Generate list View from ArrayList
+                displayListView(list);
+
+                checkButtonClick();
+            }
+        });
+    }
+
+    @Override
+    public void onBroadcastNotification(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
+                        .setSmallIcon(R.drawable.ic_stat_name)
+                        .setContentTitle("Map Update")
+                        .setContentText("Map has been updated, synchronize your navigation steps");
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                // notificationID allows you to update the notification later on.
+                mNotificationManager.notify(1, mBuilder.build());
+                //TODO: ADD action on notification click
+
+            }
+        });
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "onConnected: " + bundle);
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        Log.d(TAG, "onConnectionSuspended: " + cause);
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG, "onConnectionFailed: " + connectionResult);
+    }
+
+    /***********************************/
+    /**          FUNCTIONS            **/
+    /***********************************/
+
+    private void getPath() {
+        JSONObject itinerary = new JSONObject();
+        try {
+            itinerary.put("source", "a");
+            itinerary.put("destination", "f");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        path.askForPath(itinerary);
+    }
+
+
+    /***********************************/
+    /**          LIST CHECKBOX        **/
+    /***********************************/
+
+    private void displayListView(ArrayList<String> list) {
 
         //Array list of countries
-        ArrayList<POI> POIList = new ArrayList<POI>();
+        ArrayList<POI> POIList = new ArrayList<>();
 
+        for (String name : list) {
+            POIList.add(new POI(name, false));
+        }
 
         //create an ArrayAdaptar from the String Array
         dataAdapter = new MyCustomAdapter(this,
@@ -189,6 +319,7 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
+    //TOAST CE QUON A COCHE
     private void checkButtonClick() {
 
         Button myButton = (Button) findViewById(R.id.findSelected);
@@ -217,133 +348,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
-     *
-     *
-     *
-     *
-     *
-     *
+     * FIN LISTE
      */
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        googleApiClient.connect();
-        SystemRequirementsChecker.checkWithDefaultDialogs(this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        googleApiClient.disconnect();
-    }
-
-    /***********************************/
-    /**          LISTENERS            **/
-    /***********************************/
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.getPathButton:
-                getPath();
-                //display progressbar
-                getPathButton.setVisibility(View.GONE);
-                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
-                pb.setVisibility(View.VISIBLE);
-                break;
-        }
-    }
-
-    @Override
-    public void onPathFetched(final ArrayList<Node> path) throws JSONException {
-        instructions = new ArrayList<>();
-
-        for (int i=0; i<path.size(); i++) {
-            instructions.add(path.get(i).getInstruction());
-        }
-
-        // Todo: Tableau d'indications à mettre
-        //PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/indications");
-        //putDataMapReq.getDataMap().putString("indications", "TABLEAU");
-        //PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-        //PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
-
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                TextView t = (TextView) findViewById(R.id.result_tv);
-                t.setText(path.toString());
-                //t.setFontFeatureSettings();
-                t.setVisibility(View.VISIBLE);
-
-                //display button again
-                Button getPathButton = (Button) findViewById(R.id.getPathButton);
-                getPathButton.setVisibility(View.VISIBLE);
-                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
-                pb.setVisibility(View.GONE);
-            }
-        });
-    }
-
-    @Override
-    public void POIListNotification(final ArrayList<String> list) {
-        Log.d(TAG, "NOTIF: POI LIST" + list.toString());
-
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-            }
-        });
-    }
-
-    @Override
-    public void onBroadcastNotification(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
-                        .setSmallIcon(R.drawable.ic_stat_name)
-                        .setContentTitle("Map Update")
-                        .setContentText("Map has been updated, synchronize your navigation steps");
-                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                // notificationID allows you to update the notification later on.
-                mNotificationManager.notify(1, mBuilder.build());
-                //TODO: ADD action on notification click
-
-            }
-        });
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "onConnected: " + bundle);
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        Log.d(TAG, "onConnectionSuspended: " + cause);
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed: " + connectionResult);
-    }
-
-    /***********************************/
-    /**          FUNCTIONS            **/
-    /***********************************/
-
-    private void getPath() {
-        JSONObject itinerary = new JSONObject();
-        try {
-            itinerary.put("source", "a");
-            itinerary.put("destination", "f");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        path.askForPath(itinerary);
-    }
 }
