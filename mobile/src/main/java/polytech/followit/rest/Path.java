@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
@@ -19,22 +20,21 @@ import polytech.followit.POI;
 
 public class Path {
 
+    private static Path mInstance = null;
     // This is the reference to the associated listener
-    private SocketCallBack socketCallBack;
+    public SocketCallBack socketCallBack;
 
-    private static final String TAG = Path.class.getSimpleName();
-    private Context context;
-    private Socket socket;
+    public final String TAG = Path.class.getSimpleName();
+    public Socket socket;
     //Liste navigation
-    private ArrayList<Node> result;
+    public ArrayList<Node> result;
     //List POI avec leur node associé
-    private ArrayList<POI> POIList;
+    public ArrayList<POI> POIList;
     public String source;
     public String destination;
 
-    public Path(Context c, final SocketCallBack socketCallBack) {
+    public Path(final SocketCallBack socketCallBack) {
         this.socketCallBack = socketCallBack;
-        context = c;
         try {
             socket = IO.socket("https://followit-backend.herokuapp.com/");
         } catch (URISyntaxException e) {
@@ -92,6 +92,13 @@ public class Path {
 
         });
         socket.connect();
+    }
+
+    public static Path getInstance(SocketCallBack s) {
+        if (mInstance == null) {
+            mInstance = new Path(s);
+        }
+        return mInstance;
     }
 
     public ArrayList<POI> getPOIList() {

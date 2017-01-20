@@ -11,8 +11,27 @@
         android:layout_height="match_parent"
         android:id="@+id/instructions_textView"
         android:layout_weight="50"
-        android:textColorLink="?attr/colorBackgroundFloating" />
+        android:textColorLink="?attr/colorBackgroundFloating"
+        android:textStyle="normal|bold"
+        android:textAlignment="center"
+        android:textSize="24sp" />
 
+    <TextView
+        android:id="@+id/tvHeading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="40dp"
+        android:layout_marginTop="20dp"
+        android:text="Heading: 0.0" />
+
+    <ImageView
+        android:id="@+id/imageViewCompass"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tvHeading"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/img_compass" />
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"

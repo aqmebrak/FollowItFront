@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private Path path;
     private Button getPathButton;
 
     private GoogleApiClient googleApiClient;
@@ -86,12 +85,13 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
         googleApiClient.connect();
 
-        path = new Path(MainActivity.this, this);
+        Path.getInstance(this);
+
         getPathButton = (Button) findViewById(R.id.getPathButton);
 
         Log.d(TAG, "GET POI LIST");
         //GET POI LIST
-        path.askPOIList();
+        Path.getInstance(this).askPOIList();
         // Set listeners
         getPathButton.setOnClickListener(this);
         Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
@@ -132,14 +132,13 @@ public class MainActivity extends AppCompatActivity implements
                 String destination = null;
 
                 //on recupere le val du dropdown
-                if (path.source != null) {
-                    path.destination = getSelectedCheckbox();
-                    if (path.destination != null) {
-                        Log.d(TAG, "BUTTON" + path.source + path.destination);
-                        getPath(path.source, path.destination);
+                if (Path.getInstance(this).source != null) {
+                    Path.getInstance(this).destination = getSelectedCheckbox();
+                    if (Path.getInstance(this).destination != null) {
+                        Log.d(TAG, "BUTTON" + Path.getInstance(this).source + Path.getInstance(this).destination);
+                        getPath(Path.getInstance(this).source, Path.getInstance(this).destination);
                     }
                 }
-
                 //display progressbar
                 getPathButton.setVisibility(View.GONE);
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
@@ -162,27 +161,13 @@ public class MainActivity extends AppCompatActivity implements
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                TextView t = (TextView) findViewById(R.id.result_tv);
-                t.setText(path.toString());
-                //t.setFontFeatureSettings();
-                t.setVisibility(View.VISIBLE);
-
-                //display button again
-                Button getPathButton = (Button) findViewById(R.id.getPathButton);
-                getPathButton.setVisibility(View.VISIBLE);
-                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
-                pb.setVisibility(View.GONE);
-            }
-        });
-
         /*
          * SWITCHER VUE
          */
         Intent intent = new Intent(getBaseContext(), NavigationActivity.class);
         intent.putExtra("nodeList", path);
+        intent.putExtra("source",Path.getInstance(this).source);
+        intent.putExtra("destination",Path.getInstance(this).destination);
         startActivity(intent);
     }
 
@@ -213,21 +198,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBroadcastNotification(final String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(MainActivity.this)
-                        .setSmallIcon(R.drawable.ic_stat_name)
-                        .setContentTitle("Map Update")
-                        .setContentText("Map has been updated, synchronize your navigation steps");
-                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                // notificationID allows you to update the notification later on.
-                mNotificationManager.notify(1, mBuilder.build());
-                //TODO: ADD action on notification click
-
-            }
-        });
+        //NOT USED
     }
 
     @Override
@@ -249,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         String item = (String) parent.getItemAtPosition(position);
         Log.d(TAG, "ITEM SPINNER SELECTED" + item);
-        path.source = item;
+        Path.getInstance(this).source = item;
     }
 
     @Override
@@ -264,17 +235,21 @@ public class MainActivity extends AppCompatActivity implements
         String source = "";
         String destination = "";
 
-        for (POI p : path.getPOIList()) {
+        //Pour chaque POI cliqué par l'user, on cherche son noeud correspondant
+        for (POI p : Path.getInstance(this).getPOIList()) {
             Log.d(TAG, p.toString());
             if (p.getName() == POIsource) {
                 source = p.getNode();
             } else if (p.getName() == POIdestination) {
                 destination = p.getNode();
             }
-
         }
+
+        //si nos deux noeuds ont été bien récupérés, on créé le JSON
         if (source != "" && destination != "") {
-            Log.d(TAG, "source et destination OK\n");
+            //on en profite pour enregistrer les noeuds dans SINGLETON PATH
+            Path.getInstance(this).source = source;
+            Path.getInstance(this).destination = destination;
             JSONObject itinerary = new JSONObject();
             try {
                 itinerary.put("source", source);
@@ -282,7 +257,8 @@ public class MainActivity extends AppCompatActivity implements
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            path.askForPath(itinerary);
+            //On appelle le socket.emit demandant le chemin
+            Path.getInstance(this).askForPath(itinerary);
         }
     }
 
@@ -292,13 +268,32 @@ public class MainActivity extends AppCompatActivity implements
     /***********************************/
 
     private void displayListView(ArrayList<POI> POIList) {
-
         //create an ArrayAdaptar from the String Array
         dataAdapter = new MyCustomAdapter(this,
                 R.layout.country_info, POIList);
         ListView listView = (ListView) findViewById(R.id.poi_list);
         // Assign adapter to ListView
         listView.setAdapter(dataAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                // When clicked, show a toast with the TextView text
+                POI poi = (POI) parent.getItemAtPosition(position);
+                CheckBox cb = (CheckBox) view.findViewById(R.id.checkBox1);
+                if (poi.getName() != Path.getInstance(MainActivity.this).source) {
+                    if (poi.isSelected()) {
+                        poi.setSelected(false);
+                        cb.setChecked(false);
+                    } else {
+                        poi.setSelected(true);
+                        cb.setChecked(true);
+                    }
+                }
+
+
+            }
+        });
     }
 
     private class MyCustomAdapter extends ArrayAdapter<POI> {
@@ -343,10 +338,6 @@ public class MainActivity extends AppCompatActivity implements
                 public void onClick(View v) {
                     CheckBox cb = (CheckBox) v;
                     POI p = (POI) cb.getTag();
-                    Toast.makeText(getApplicationContext(),
-                            "Clicked on Checkbox: " + cb.getText() +
-                                    " is " + cb.isChecked(),
-                            Toast.LENGTH_LONG).show();
                     p.setSelected(cb.isChecked());
                 }
             });
