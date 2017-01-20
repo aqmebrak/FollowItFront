@@ -4,11 +4,13 @@ package polytech.followit;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +22,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +32,7 @@ import polytech.followit.rest.Path;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.service.BroadcastResponseReceiver;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -46,7 +50,8 @@ public class MainActivity extends AppCompatActivity implements
         SocketCallBack,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        View.OnClickListener {
+        View.OnClickListener,
+        AdapterView.OnItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private Path path;
@@ -77,25 +82,28 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.pb).setVisibility(View.GONE);
 
         // Build a new GoogleApiClient for the Wearable API
-        googleApiClient = new GoogleApiClient.Builder(this)
+        /*googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-        googleApiClient.connect();
+        googleApiClient.connect();*/
 
         path = new Path(MainActivity.this, this);
         getPathButton = (Button) findViewById(R.id.getPathButton);
 
+        Log.d(TAG, "GET POI LIST");
         //GET POI LIST
-        path.getPOIList();
+        path.askPOIList();
         // Set listeners
         getPathButton.setOnClickListener(this);
+        Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
+        listSpinner.setOnItemSelectedListener(this);
 
         // Service part
-        startService(new Intent(this, BeaconMonitoringService.class));
-        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+        //startService(new Intent(this, BeaconMonitoringService.class));
+        //filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
+        //LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
         //POURQUOI ? SINON CA AFFICHE QUAND MEME....
         ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
@@ -103,18 +111,17 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-
     @Override
     protected void onResume() {
         super.onResume();
-        googleApiClient.connect();
-        SystemRequirementsChecker.checkWithDefaultDialogs(this);
+        //googleApiClient.connect();
+        //SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        googleApiClient.disconnect();
+        //googleApiClient.disconnect();
     }
 
     /***********************************/
@@ -123,9 +130,20 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onClick(View view) {
+
         switch (view.getId()) {
             case R.id.getPathButton:
-                getPath();
+                String destination = null;
+
+                //on recupere le val du dropdown
+                if (path.source != null) {
+                    path.destination = getSelectedCheckbox();
+                    if (path.destination != null) {
+                        Log.d(TAG, "BUTTON" + path.source + path.destination);
+                        getPath(path.source, path.destination);
+                    }
+                }
+
                 //display progressbar
                 getPathButton.setVisibility(View.GONE);
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
@@ -138,15 +156,15 @@ public class MainActivity extends AppCompatActivity implements
     public void onPathFetched(final ArrayList<Node> path) throws JSONException {
         instructions = new ArrayList<>();
 
-        for (int i=0; i<path.size(); i++) {
+        for (int i = 0; i < path.size(); i++) {
             instructions.add(path.get(i).getInstruction());
         }
 
         // Todo: Tableau d'indications à mettre
-        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
-        putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
-        PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-        PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
+        //PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
+        //putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
+        //PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
+        //PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
         this.runOnUiThread(new Runnable() {
             @Override
@@ -173,16 +191,26 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void POIListNotification(final ArrayList<String> list) {
+    public void POIListNotification(final ArrayList<POI> list) {
         Log.d(TAG, "NOTIF: POI LIST" + list.toString());
 
+        final ArrayList<String> POIonly = new ArrayList<>();
+
+        for (POI p : list) {
+            POIonly.add(p.getName());
+        }
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                //Liste Dropdown pour le départ
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_spinner_item, POIonly);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+                Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
+                listSpinner.setAdapter(adapter);
+
                 //Generate list View from ArrayList
                 displayListView(list);
-
-                checkButtonClick();
             }
         });
     }
@@ -221,19 +249,45 @@ public class MainActivity extends AppCompatActivity implements
         Log.d(TAG, "onConnectionFailed: " + connectionResult);
     }
 
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        String item = (String) parent.getItemAtPosition(position);
+        Log.d(TAG, "ITEM SPINNER SELECTED" + item);
+        path.source = item;
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
     /***********************************/
     /**          FUNCTIONS            **/
     /***********************************/
 
-    private void getPath() {
-        JSONObject itinerary = new JSONObject();
-        try {
-            itinerary.put("source", "a");
-            itinerary.put("destination", "f");
-        } catch (JSONException e) {
-            e.printStackTrace();
+    private void getPath(String POIsource, String POIdestination) {
+        String source = "";
+        String destination = "";
+
+        for (POI p : path.getPOIList()) {
+            Log.d(TAG, p.toString());
+            if (p.getName() == POIsource) {
+                source = p.getNode();
+            } else if (p.getName() == POIdestination) {
+                destination = p.getNode();
+            }
+
         }
-        path.askForPath(itinerary);
+        if (source != "" && destination != "") {
+            Log.d(TAG, "source et destination OK\n");
+            JSONObject itinerary = new JSONObject();
+            try {
+                itinerary.put("source", source);
+                itinerary.put("destination", destination);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            path.askForPath(itinerary);
+        }
     }
 
 
@@ -241,14 +295,7 @@ public class MainActivity extends AppCompatActivity implements
     /**          LIST CHECKBOX        **/
     /***********************************/
 
-    private void displayListView(ArrayList<String> list) {
-
-        //Array list of countries
-        ArrayList<POI> POIList = new ArrayList<>();
-
-        for (String name : list) {
-            POIList.add(new POI(name, false));
-        }
+    private void displayListView(ArrayList<POI> POIList) {
 
         //create an ArrayAdaptar from the String Array
         dataAdapter = new MyCustomAdapter(this,
@@ -256,19 +303,6 @@ public class MainActivity extends AppCompatActivity implements
         ListView listView = (ListView) findViewById(R.id.poi_list);
         // Assign adapter to ListView
         listView.setAdapter(dataAdapter);
-
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                // When clicked, show a toast with the TextView text
-                POI POI = (POI) parent.getItemAtPosition(position);
-                Toast.makeText(getApplicationContext(),
-                        "Clicked on Row: " + POI.getName(),
-                        Toast.LENGTH_LONG).show();
-            }
-        });
-
     }
 
     private class MyCustomAdapter extends ArrayAdapter<POI> {
@@ -309,7 +343,17 @@ public class MainActivity extends AppCompatActivity implements
             holder.name.setText(POI.getName());
             holder.name.setChecked(POI.isSelected());
             holder.name.setTag(POI);
-
+            holder.name.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    CheckBox cb = (CheckBox) v;
+                    POI p = (POI) cb.getTag();
+                    Toast.makeText(getApplicationContext(),
+                            "Clicked on Checkbox: " + cb.getText() +
+                                    " is " + cb.isChecked(),
+                            Toast.LENGTH_LONG).show();
+                    p.setSelected(cb.isChecked());
+                }
+            });
             return convertView;
 
         }
@@ -317,31 +361,21 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     //TOAST CE QUON A COCHE
-    private void checkButtonClick() {
+    private String getSelectedCheckbox() {
+        String selected = "";
 
-        Button myButton = (Button) findViewById(R.id.findSelected);
-        myButton.setOnClickListener(new View.OnClickListener() {
+        ArrayList<POI> POIList = dataAdapter.POIList;
+        for (int i = 0; i < POIList.size(); i++) {
 
-            @Override
-            public void onClick(View v) {
-
-                StringBuffer responseText = new StringBuffer();
-                responseText.append("The following were selected...\n");
-
-                ArrayList<POI> POIList = dataAdapter.POIList;
-                for (int i = 0; i < POIList.size(); i++) {
-                    POI POI = POIList.get(i);
-                    if (POI.isSelected()) {
-                        responseText.append("\n" + POI.getName());
-                    }
-                }
-
-                Toast.makeText(getApplicationContext(),
-                        responseText, Toast.LENGTH_LONG).show();
-
+            POI p = POIList.get(i);
+            Log.d(TAG, p.toString());
+            if (p.isSelected()) {
+                Log.d(TAG, "SELECTED");
+                selected = p.getName();
+                break;
             }
-        });
-
+        }
+        return selected;
     }
 
     /**

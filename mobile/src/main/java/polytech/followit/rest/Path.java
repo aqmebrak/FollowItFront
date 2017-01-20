@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
+import polytech.followit.POI;
 
 public class Path {
 
@@ -22,12 +23,14 @@ public class Path {
     private SocketCallBack socketCallBack;
 
     private static final String TAG = Path.class.getSimpleName();
-    private ArrayList<String> nodes;
-    private String source;
-    private String destination;
     private Context context;
     private Socket socket;
-
+    //Liste navigation
+    private ArrayList<Node> result;
+    //List POI avec leur node associé
+    private ArrayList<POI> POIList;
+    public String source;
+    public String destination;
 
     public Path(Context c, final SocketCallBack socketCallBack) {
         this.socketCallBack = socketCallBack;
@@ -47,6 +50,8 @@ public class Path {
 
             @Override
             public void call(Object... args) {
+                Log.d(TAG, "PATH SOCKET CALLBACK");
+
                 buildPathWithNodes(args);
             }
 
@@ -56,17 +61,18 @@ public class Path {
             public void call(Object... args) {
                 JSONObject response = (JSONObject) args[0];
 
-                ArrayList<String> list = new ArrayList<String>();
+                POIList = new ArrayList<POI>();
                 Log.d(TAG, "call: POI LIST" + response.toString());
                 try {
                     JSONArray a = (JSONArray) response.get("poi");
                     for (int i = 0; i < a.length(); i++) {
-                        list.add((String) a.get(i));
+                        JSONObject el = (JSONObject) a.get(i);
+                        POIList.add(new POI((String) el.get("poi"), (String) el.get("node"), false));
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                socketCallBack.POIListNotification(list);
+                socketCallBack.POIListNotification(POIList);
             }
 
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -88,43 +94,23 @@ public class Path {
         socket.connect();
     }
 
-    public ArrayList<String> getNodes() {
-        return nodes;
-    }
-
-    public void setNodes(ArrayList<String> nodes) {
-        this.nodes = nodes;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    public void setDestination(String destination) {
-        this.destination = destination;
+    public ArrayList<POI> getPOIList() {
+        return POIList;
     }
 
     public void askForPath(JSONObject param) {
+        Log.d(TAG, "ASKING PATH SOCKET");
         socket.emit("askPath", param);
     }
 
-    public void getPOIList() {
+    public void askPOIList() {
         socket.emit("getPOI");
     }
-
 
     private void buildPathWithNodes(Object... args) {
         String node_name, node_instruction;
         ArrayList<String> node_poi;
-        ArrayList<Node> result = new ArrayList<>();
+        result = new ArrayList<>();
 
         try {
             JSONObject response = (JSONObject) args[0];
@@ -142,7 +128,7 @@ public class Path {
                 result.add(new Node(node_name, node_poi, node_instruction));
             }
 
-            Log.d(TAG,"result : "+result);
+            Log.d(TAG, "result : " + result);
             socketCallBack.onPathFetched(result);
         } catch (JSONException e) {
             e.printStackTrace();
