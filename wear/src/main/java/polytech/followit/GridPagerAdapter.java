@@ -21,7 +21,7 @@ public class GridPagerAdapter extends FragmentGridPagerAdapter {
         if (ApplicationListener.instructions != null) {
             GridPagerRow pagerRow = new GridPagerRow();
             for (int i=1; i<ApplicationListener.instructions.size() -1; i++) {
-                pagerRow.addColumn(CardFragment.create("titre", ApplicationListener.instructions.get(i)));
+                pagerRow.addColumn(CardFragment.create("Instruction", ApplicationListener.instructions.get(i)));
             }
             rowList.add(pagerRow);
         }
