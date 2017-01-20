@@ -1,8 +1,6 @@
-package com.followit.android;
+package polytech.followit;
 
-/**
- * Created by Akme on 19/01/2017.
- */
+
 public class POI {
 
     String name = null;

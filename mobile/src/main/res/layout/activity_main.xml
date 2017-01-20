@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:weightSum="1"
-    tools:context="com.followit.android.MainActivity">
+    tools:context="polytech.followit.MainActivity">
 
     <Button
         android:id="@+id/findSelected"

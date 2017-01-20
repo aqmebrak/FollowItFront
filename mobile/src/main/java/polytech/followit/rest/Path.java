@@ -1,15 +1,14 @@
-package com.followit.android.rest;
+package polytech.followit.rest;
 
 import android.content.Context;
 import android.util.Log;
 
-import com.followit.android.Node;
+import polytech.followit.Node;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 

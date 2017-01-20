@@ -1,4 +1,4 @@
-package followit.followit;
+package polytech.followit;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -18,6 +18,10 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.Wearable;
 
+import java.util.ArrayList;
+
+import followit.followit.R;
+
 import static com.google.android.gms.wearable.DataMap.TAG;
 
 public class MainActivity extends Activity implements
@@ -27,7 +31,8 @@ public class MainActivity extends Activity implements
 
     private TextView mTextView;
     private GoogleApiClient googleClient;
-    private int count = 0;
+
+    private ArrayList<String> instructions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +43,6 @@ public class MainActivity extends Activity implements
             @Override
             public void onLayoutInflated(WatchViewStub stub) {
                 mTextView = (TextView) stub.findViewById(R.id.text);
-                mTextView.setText(String.valueOf(count));
             }
         });
 
@@ -67,6 +71,7 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "on connected : " + bundle);
         Wearable.DataApi.addListener(googleClient, this);
     }
 
@@ -87,10 +92,11 @@ public class MainActivity extends Activity implements
             if (event.getType() == DataEvent.TYPE_CHANGED) {
                 // DataItem changed
                 DataItem item = event.getDataItem();
-                if (item.getUri().getPath().compareTo("/count") == 0) {
+                if (item.getUri().getPath().compareTo("/instructions") == 0) {
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
-                    updateCount(dataMap.getInt("COUNT_EXAMPLE"));
-                    Log.d(TAG, "RECU" + dataMap.getInt("COUNT_EXAMPLE"));
+                    Log.d(TAG, "RECU" + dataMap.getStringArrayList("instructions"));
+                    instructions = dataMap.getStringArrayList("instructions");
+                    mTextView.setText(instructions.toString());
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
                 // DataItem deleted
@@ -98,8 +104,4 @@ public class MainActivity extends Activity implements
         }
     }
 
-    // Our method to update the count
-    private void updateCount(int c) {
-        count += c;
-    }
 }

@@ -1,4 +1,4 @@
-package com.followit.android.service;
+package polytech.followit.service;
 
 import android.app.Service;
 import android.content.Intent;

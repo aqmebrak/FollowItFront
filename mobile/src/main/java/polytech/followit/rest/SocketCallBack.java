@@ -1,6 +1,6 @@
-package com.followit.android.rest;
+package polytech.followit.rest;
 
-import com.followit.android.Node;
+import polytech.followit.Node;
 
 import org.json.JSONException;
 

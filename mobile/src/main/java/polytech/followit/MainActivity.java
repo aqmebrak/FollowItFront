@@ -1,16 +1,14 @@
-package com.followit.android;
+package polytech.followit;
 
 
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,10 +24,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.estimote.sdk.SystemRequirementsChecker;
-import com.followit.android.rest.Path;
-import com.followit.android.rest.SocketCallBack;
-import com.followit.android.service.BeaconMonitoringService;
-import com.followit.android.service.BroadcastResponseReceiver;
+
+import polytech.followit.rest.Path;
+import polytech.followit.rest.SocketCallBack;
+import polytech.followit.service.BeaconMonitoringService;
+import polytech.followit.service.BroadcastResponseReceiver;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -38,11 +37,9 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements
@@ -264,10 +261,10 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         // Todo: Tableau d'indications à mettre
-        //PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/indications");
-        //putDataMapReq.getDataMap().putString("indications", "TABLEAU");
-        //PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-        //PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
+        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
+        putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
+        PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
+        PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
         this.runOnUiThread(new Runnable() {
             @Override

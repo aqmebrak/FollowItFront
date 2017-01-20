@@ -1,4 +1,4 @@
-package com.followit.android.asynctask;
+package polytech.followit.asynctask;
 
 import android.os.AsyncTask;
 import android.util.Log;

@@ -1,4 +1,4 @@
-package com.followit.android;
+package polytech.followit;
 
 import java.util.ArrayList;
 

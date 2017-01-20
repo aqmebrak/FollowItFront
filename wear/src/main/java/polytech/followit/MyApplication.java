@@ -1,4 +1,4 @@
-package followit.followit;
+package polytech.followit;
 
 
 import android.app.Application;

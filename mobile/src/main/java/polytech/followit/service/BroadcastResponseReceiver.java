@@ -1,4 +1,4 @@
-package com.followit.android.service;
+package polytech.followit.service;
 
 
 import android.app.PendingIntent;
@@ -8,8 +8,8 @@ import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
-import com.followit.android.MainActivity;
-import com.followit.android.R;
+import polytech.followit.MainActivity;
+import polytech.followit.R;
 
 public class BroadcastResponseReceiver extends BroadcastReceiver {
 

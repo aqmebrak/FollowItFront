@@ -4,7 +4,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
-        applicationId "followit.followit"
+        applicationId "polytech.followit"
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
@@ -25,7 +25,7 @@ dependencies {
     // add the following line, and replace "0.11.1" with the latest version
     // of Estimote Android SDK; you'll find the latest version number on:
     //   https://github.com/Estimote/Android-SDK/releases
-    compile 'com.estimote:sdk:0.13.0@aar'
+    compile 'com.estimote:sdk:0.15.0@aar'
     compile 'io.socket:socket.io-client:0.8.3'
-    compile 'com.google.android.gms:play-services-wearable:9.0.0'
+    compile 'com.google.android.gms:play-services-wearable:8.4.0'
 }

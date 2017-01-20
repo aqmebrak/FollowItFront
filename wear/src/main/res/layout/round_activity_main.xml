@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="followit.followit.MainActivity"
+    tools:context="polytech.followit.MainActivity"
     tools:deviceIds="wear_round">
 
     <TextView
