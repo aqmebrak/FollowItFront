@@ -14,15 +14,18 @@ public class GridPagerAdapter extends FragmentGridPagerAdapter {
 
     private final ArrayList<GridPagerRow> rowList = new ArrayList<>();
 
-    public GridPagerAdapter(Context context, FragmentManager fm) {
-        super(fm);
+    public GridPagerAdapter(Context context, FragmentManager fragmentManager) {
+        super(fragmentManager);
         this.context = context;
 
         if (ApplicationListener.instructions != null) {
-            for (String instruction : ApplicationListener.instructions) {
-                rowList.add(new GridPagerRow(CardFragment.create("titre", instruction)));
+            GridPagerRow pagerRow = new GridPagerRow();
+            for (int i=1; i<ApplicationListener.instructions.size() -1; i++) {
+                pagerRow.addColumn(CardFragment.create("titre", ApplicationListener.instructions.get(i)));
             }
+            rowList.add(pagerRow);
         }
+
         /*rowList.add(new GridPagerRow(CardFragment.create("titre 1","contenu 1"),
                 CardFragment.create("HAHA","YOLO")));
         rowList.add(new GridPagerRow(CardFragment.create("titre 2","contenu 2")));*/
