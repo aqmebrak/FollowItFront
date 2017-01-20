@@ -15,6 +15,8 @@ public class GridPagerRow {
         Collections.addAll(columns, fragments);
     }
 
+    public void addColumn(Fragment fragment) { columns.add(fragment); }
+
     Fragment getColumn(int i) {
         return columns.get(i);
     }

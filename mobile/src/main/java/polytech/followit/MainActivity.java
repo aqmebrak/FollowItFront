@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -27,14 +26,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.estimote.sdk.SystemRequirementsChecker;
-
-import polytech.followit.rest.Path;
-import polytech.followit.rest.SocketCallBack;
-import polytech.followit.service.BeaconMonitoringService;
-import polytech.followit.service.BroadcastResponseReceiver;
-
-import com.followit.android.NavigationActivity;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -47,6 +38,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+
+import polytech.followit.rest.Path;
+import polytech.followit.rest.SocketCallBack;
+import polytech.followit.service.BroadcastResponseReceiver;
 
 public class MainActivity extends AppCompatActivity implements
         SocketCallBack,
@@ -162,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         // Todo: Tableau d'indications à mettre
-        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
+        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/startActivity");
         putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);

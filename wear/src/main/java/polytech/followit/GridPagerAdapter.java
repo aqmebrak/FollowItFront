@@ -18,8 +18,8 @@ public class GridPagerAdapter extends FragmentGridPagerAdapter {
         super(fm);
         this.context = context;
 
-        if (MainActivity.instructions != null) {
-            for (String instruction : MainActivity.instructions) {
+        if (ApplicationListener.instructions != null) {
+            for (String instruction : ApplicationListener.instructions) {
                 rowList.add(new GridPagerRow(CardFragment.create("titre", instruction)));
             }
         }
