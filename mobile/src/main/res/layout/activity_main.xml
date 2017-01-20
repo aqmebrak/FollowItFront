@@ -8,18 +8,31 @@
     android:weightSum="1"
     tools:context="polytech.followit.MainActivity">
 
-    <Button
-        android:id="@+id/findSelected"
+    <TextView
+        android:text="Choisissez votre lieu de départ"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Find countries that are Selected" />
+        android:id="@+id/textView"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textAlignment="center" />
+
+    <Spinner
+        android:id="@+id/select_shops_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginTop="17dp" />
+
+    <TextView
+        android:text="Choisissez votre lieu d'arrivée"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView2"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textAlignment="center" />
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="312dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_above="@+id/getPathButton"
         android:id="@+id/poi_list" />
 
     <TextView
@@ -27,24 +40,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/result_tv"
-        android:layout_above="@+id/pb"
-        android:layout_alignParentStart="true" />
+        android:layout_above="@+id/pb" />
 
     <Button
         android:id="@+id/getPathButton"
         android:layout_width="match_parent"
         android:layout_height="38dp"
         android:elevation="0dp"
-        android:text="Get Path"
-        android:layout_alignParentStart="true" />
+        android:text="Get Path" />
 
     <ProgressBar
         style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Small"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/pb"
-        android:layout_centerVertical="true"
-        android:layout_alignParentStart="true" />
+        android:id="@+id/pb" />
 
 
 </LinearLayout>

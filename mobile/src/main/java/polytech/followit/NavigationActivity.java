@@ -1,4 +1,4 @@
-package com.followit.android;
+package polytech.followit;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -6,6 +6,9 @@ import android.util.Log;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+
+import polytech.followit.Node;
+import polytech.followit.R;
 
 /**
  * Created by Akme on 19/01/2017.

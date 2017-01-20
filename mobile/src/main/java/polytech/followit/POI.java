@@ -3,12 +3,14 @@ package polytech.followit;
 
 public class POI {
 
-    String name = null;
-    boolean selected = false;
+    private String name = null;
+    private String node = null;
+    private boolean selected = false;
 
-    public POI(String name, boolean selected) {
+    public POI(String name, String node, boolean selected) {
         super();
         this.name = name;
+        this.node = node;
         this.selected = selected;
     }
 
@@ -28,4 +30,7 @@ public class POI {
         this.selected = selected;
     }
 
+    public String getNode() {
+        return node;
+    }
 }
