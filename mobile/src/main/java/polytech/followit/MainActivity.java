@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private Button getPathButton;
 
     private GoogleApiClient googleApiClient;
     private PutDataMapRequest mapRequest;
@@ -62,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements
     private IntentFilter filter;
     private BroadcastReceiver broadcastReceiver = new BroadcastResponseReceiver();
 
+
+    //SOCKET CLASS
+    Path path;
 
     MyCustomAdapter dataAdapter = null;
 
@@ -85,13 +87,13 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
         googleApiClient.connect();
 
-        Path.getInstance(this);
+        path = new Path(this);
 
-        getPathButton = (Button) findViewById(R.id.getPathButton);
+        Button getPathButton = (Button) findViewById(R.id.getPathButton);
 
         Log.d(TAG, "GET POI LIST");
         //GET POI LIST
-        Path.getInstance(this).askPOIList();
+        path.askPOIList();
         // Set listeners
         getPathButton.setOnClickListener(this);
         Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
@@ -132,14 +134,15 @@ public class MainActivity extends AppCompatActivity implements
                 String destination = null;
 
                 //on recupere le val du dropdown
-                if (Path.getInstance(this).source != null) {
-                    Path.getInstance(this).destination = getSelectedCheckbox();
-                    if (Path.getInstance(this).destination != null) {
-                        Log.d(TAG, "BUTTON" + Path.getInstance(this).source + Path.getInstance(this).destination);
-                        getPath(Path.getInstance(this).source, Path.getInstance(this).destination);
+                if (path.source != null) {
+                    path.destination = getSelectedCheckbox();
+                    if (path.destination != null) {
+                        Log.d(TAG, "BUTTON" + path.source + path.destination);
+                        getPath(path.source, path.destination);
                     }
                 }
                 //display progressbar
+                Button getPathButton = (Button) findViewById(R.id.getPathButton);
                 getPathButton.setVisibility(View.GONE);
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.VISIBLE);
@@ -161,13 +164,24 @@ public class MainActivity extends AppCompatActivity implements
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
+                pb.setVisibility(View.GONE);
+                Button getPathButton = (Button) findViewById(R.id.getPathButton);
+                getPathButton.setVisibility(View.VISIBLE);
+            }
+        });
+
         /*
          * SWITCHER VUE
          */
         Intent intent = new Intent(getBaseContext(), NavigationActivity.class);
         intent.putExtra("nodeList", path);
-        intent.putExtra("source",Path.getInstance(this).source);
-        intent.putExtra("destination",Path.getInstance(this).destination);
+        Log.d(TAG, this.path.source + this.path.destination);
+        intent.putExtra("source", this.path.source.toString());
+        intent.putExtra("destination", this.path.destination.toString());
         startActivity(intent);
     }
 
@@ -220,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         String item = (String) parent.getItemAtPosition(position);
         Log.d(TAG, "ITEM SPINNER SELECTED" + item);
-        Path.getInstance(this).source = item;
+        path.source = item;
     }
 
     @Override
@@ -236,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements
         String destination = "";
 
         //Pour chaque POI cliqué par l'user, on cherche son noeud correspondant
-        for (POI p : Path.getInstance(this).getPOIList()) {
+        for (POI p : path.getPOIList()) {
             Log.d(TAG, p.toString());
             if (p.getName() == POIsource) {
                 source = p.getNode();
@@ -248,8 +262,8 @@ public class MainActivity extends AppCompatActivity implements
         //si nos deux noeuds ont été bien récupérés, on créé le JSON
         if (source != "" && destination != "") {
             //on en profite pour enregistrer les noeuds dans SINGLETON PATH
-            Path.getInstance(this).source = source;
-            Path.getInstance(this).destination = destination;
+            path.source = source;
+            path.destination = destination;
             JSONObject itinerary = new JSONObject();
             try {
                 itinerary.put("source", source);
@@ -258,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
             //On appelle le socket.emit demandant le chemin
-            Path.getInstance(this).askForPath(itinerary);
+            path.askForPath(itinerary);
         }
     }
 
@@ -281,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements
                 // When clicked, show a toast with the TextView text
                 POI poi = (POI) parent.getItemAtPosition(position);
                 CheckBox cb = (CheckBox) view.findViewById(R.id.checkBox1);
-                if (poi.getName() != Path.getInstance(MainActivity.this).source) {
+                if (poi.getName() != path.source) {
                     if (poi.isSelected()) {
                         poi.setSelected(false);
                         cb.setChecked(false);

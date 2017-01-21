@@ -70,9 +70,10 @@ public class NavigationActivity extends AppCompatActivity
         p = new Path(this);
 
         //RECUPERE LES DONNES
+        Bundle bundle = getIntent().getExtras();
+        p.source = bundle.getString("source");
+        p.destination = bundle.getString("destination");
         listNavigation = (ArrayList<Node>) getIntent().getSerializableExtra("nodeList");
-        p.source = getIntent().getStringExtra("nodeList");
-        p.destination = getIntent().getStringExtra("nodeList");
 
 
         Log.d("NAVIGATION:", listNavigation.toString());
@@ -124,9 +125,14 @@ public class NavigationActivity extends AppCompatActivity
             }
         }
         //On affiche la 1ere etape
-        TextView t = (TextView) findViewById(R.id.instructions_textView);
-        t.setText(navigationSteps.get(index).instruction);
-        ongoingInstruction = navigationSteps.get(index);
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView t = (TextView) findViewById(R.id.instructions_textView);
+                t.setText(navigationSteps.get(index).instruction);
+                ongoingInstruction = navigationSteps.get(index);
+            }
+        });
     }
 
     @Override
@@ -224,7 +230,7 @@ public class NavigationActivity extends AppCompatActivity
                 //on cherche l'étape active
                 Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
 
-                Log.d(TAG, "ONGOING");
+                Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + p.destination);
                 JSONObject o = new JSONObject();
                 try {
                     o.put("source", ongoingInstruction.nodeToGoTo);
@@ -233,8 +239,6 @@ public class NavigationActivity extends AppCompatActivity
                     e.printStackTrace();
                 }
                 p.askForPath(o);
-
-
             }
         });
     }

@@ -20,7 +20,6 @@ import polytech.followit.POI;
 
 public class Path {
 
-    private static Path mInstance = null;
     // This is the reference to the associated listener
     public SocketCallBack socketCallBack;
 
@@ -92,13 +91,6 @@ public class Path {
 
         });
         socket.connect();
-    }
-
-    public static Path getInstance(SocketCallBack s) {
-        if (mInstance == null) {
-            mInstance = new Path(s);
-        }
-        return mInstance;
     }
 
     public ArrayList<POI> getPOIList() {
