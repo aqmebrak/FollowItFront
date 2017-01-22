@@ -2,7 +2,6 @@ package polytech.followit;
 
 
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -10,9 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -21,7 +18,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 
-import com.estimote.sdk.SystemRequirementsChecker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -175,9 +171,8 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
          */
         Intent intent = new Intent(getBaseContext(), NavigationActivity.class);
         intent.putExtra("nodeList", path);
-        Log.d(TAG, this.path.source + this.path.destination);
-        intent.putExtra("source", this.path.source.toString());
-        intent.putExtra("destination", this.path.destination.toString());
+        intent.putExtra("source", this.path.source);
+        intent.putExtra("destination", this.path.destination);
         startActivity(intent);
     }
 
@@ -248,7 +243,6 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
 
         //Pour chaque POI cliqué par l'user, on cherche son noeud correspondant
         for (POI p : path.getPOIList()) {
-            Log.d(TAG,"POILISt: " + p.getName() + " DEST => " + arrivee);
             if (Objects.equals(p.getName(), depart)) {
                 nodeSource = p.getNode();
             } else if (Objects.equals(p.getName(), arrivee)) {
@@ -269,11 +263,10 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
                 e.printStackTrace();
             }
             //On appelle le socket.emit demandant le chemin
-            Log.d(TAG,"ASKFORPATH" + itinerary.toString());
+            Log.d(TAG,"GETPATH JSON : " + itinerary.toString());
             path.askForPath(itinerary);
         }
     }
-
 
     /***********************************/
     /**          LIST CHECKBOX        **/
@@ -282,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     private void displayListView(ArrayList<POI> POIList) {
         //create an ArrayAdaptar from the String Array
         dataAdapter = new MyCustomAdapter(this,
-                R.layout.country_info, POIList);
+                R.layout.poi_info, POIList);
         ListView listView = (ListView) findViewById(R.id.poi_list);
         // Assign adapter to ListView
         listView.setAdapter(dataAdapter);
@@ -308,9 +301,6 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
         });
     }
 
-
-
-    //TOAST CE QUON A COCHE
     private String getSelectedCheckbox() {
         String selected = "";
 
@@ -326,8 +316,4 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
         }
         return selected;
     }
-
-    /**
-     * FIN LISTE
-     */
 }

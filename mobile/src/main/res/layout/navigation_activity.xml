@@ -28,10 +28,11 @@
     <ImageView
         android:id="@+id/imageViewCompass"
         android:layout_width="match_parent"
-        android:layout_height="267dp"
+        android:layout_height="249dp"
         android:layout_below="@+id/tvHeading"
         android:layout_centerHorizontal="true"
         android:src="@drawable/img_compass" />
+
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
