@@ -34,6 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
@@ -55,6 +56,9 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     private IntentFilter filter;
     private BroadcastReceiver broadcastReceiver = new BroadcastResponseReceiver();
 
+    //POI DE DEPART ET DESTINATION
+    public String depart;
+    public String arrivee;
 
     //SOCKET CLASS
     Path path;
@@ -107,14 +111,14 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     @Override
     protected void onResume() {
         super.onResume();
-        googleApiClient.connect();
-        SystemRequirementsChecker.checkWithDefaultDialogs(this);
+        //googleApiClient.connect();
+        //SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        googleApiClient.disconnect();
+        //googleApiClient.disconnect();
     }
 
     /***********************************/
@@ -125,14 +129,12 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.getPathButton:
-                String destination = null;
-
-                //on recupere le val du dropdown
-                if (path.source != null) {
-                    path.destination = getSelectedCheckbox();
-                    if (path.destination != null) {
-                        Log.d(TAG, "BUTTON" + path.source + path.destination);
-                        getPath(path.source, path.destination);
+                //on recupere le val du checkbox list
+                if (depart != null) {
+                    arrivee = getSelectedCheckbox();
+                    if (arrivee != null) {
+                        Log.d(TAG, "ONCLICKBUTTON" + depart + " " +  arrivee);
+                        getPath();
                     }
                 }
                 //display progressbar
@@ -227,9 +229,8 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        String item = (String) parent.getItemAtPosition(position);
-        Log.d(TAG, "ITEM SPINNER SELECTED" + item);
-        path.source = item;
+        depart = (String) parent.getItemAtPosition(position);
+        Log.d(TAG, "ITEM SPINNER SELECTED" + depart);
     }
 
     @Override
@@ -240,33 +241,35 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     /**          FUNCTIONS            **/
     /***********************************/
 
-    private void getPath(String POIsource, String POIdestination) {
-        String source = "";
-        String destination = "";
+    private void getPath() {
+        //NOEUD DEPART ET ARRIVEE
+        String nodeSource = "";
+        String NodeDestination = "";
 
         //Pour chaque POI cliqué par l'user, on cherche son noeud correspondant
         for (POI p : path.getPOIList()) {
-            Log.d(TAG, p.toString());
-            if (p.getName() == POIsource) {
-                source = p.getNode();
-            } else if (p.getName() == POIdestination) {
-                destination = p.getNode();
+            Log.d(TAG,"POILISt: " + p.getName() + " DEST => " + arrivee);
+            if (Objects.equals(p.getName(), depart)) {
+                nodeSource = p.getNode();
+            } else if (Objects.equals(p.getName(), arrivee)) {
+                NodeDestination = p.getNode();
             }
         }
-
+        Log.d(TAG,"GETPATH: " + nodeSource + " "+ NodeDestination);
         //si nos deux noeuds ont été bien récupérés, on créé le JSON
-        if (source != "" && destination != "") {
-            //on en profite pour enregistrer les noeuds dans SINGLETON PATH
-            path.source = source;
-            path.destination = destination;
+        if (!Objects.equals(nodeSource, "") && !Objects.equals(NodeDestination, "")) {
+            //on en profite pour enregistrer les noeuds dans PATH
+            path.source = nodeSource;
+            path.destination = NodeDestination;
             JSONObject itinerary = new JSONObject();
             try {
-                itinerary.put("source", source);
-                itinerary.put("destination", destination);
+                itinerary.put("source", nodeSource);
+                itinerary.put("destination", NodeDestination);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             //On appelle le socket.emit demandant le chemin
+            Log.d(TAG,"ASKFORPATH" + itinerary.toString());
             path.askForPath(itinerary);
         }
     }
@@ -315,9 +318,8 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
         for (int i = 0; i < POIList.size(); i++) {
 
             POI p = POIList.get(i);
-            Log.d(TAG, p.toString());
             if (p.isSelected()) {
-                Log.d(TAG, "SELECTED");
+                Log.d(TAG, "SELECTEDCHECKBOX :" + p.getName());
                 selected = p.getName();
                 break;
             }
