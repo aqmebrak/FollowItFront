@@ -1,4 +1,4 @@
-package polytech.followit;
+package polytech.followit.model;
 
 
 public class POI {

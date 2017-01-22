@@ -1,7 +1,6 @@
 package polytech.followit;
 
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -23,6 +22,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import polytech.followit.model.Instruction;
+import polytech.followit.model.Node;
+import polytech.followit.model.POI;
 import polytech.followit.rest.Path;
 import polytech.followit.rest.SocketCallBack;
 

@@ -1,4 +1,4 @@
-package polytech.followit;
+package polytech.followit.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package polytech.followit.rest;
 
-import polytech.followit.Node;
-import polytech.followit.POI;
+import polytech.followit.model.Node;
+import polytech.followit.model.POI;
 
 import org.json.JSONException;
 

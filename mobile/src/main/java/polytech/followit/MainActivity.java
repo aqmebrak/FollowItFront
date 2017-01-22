@@ -1,7 +1,6 @@
 package polytech.followit;
 
 
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +8,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,8 +20,6 @@ import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.estimote.sdk.SystemRequirementsChecker;
 import com.google.android.gms.common.ConnectionResult;
@@ -39,16 +35,14 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import polytech.followit.model.Node;
+import polytech.followit.model.POI;
 import polytech.followit.rest.Path;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BroadcastResponseReceiver;
 
-public class MainActivity extends AppCompatActivity implements
-        SocketCallBack,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        View.OnClickListener,
-        AdapterView.OnItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements SocketCallBack,GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, AdapterView.OnItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -194,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements
         for (POI p : list) {
             POIonly.add(p.getName());
         }
+
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -310,62 +305,13 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
-    private class MyCustomAdapter extends ArrayAdapter<POI> {
 
-        private ArrayList<POI> POIList;
-
-        public MyCustomAdapter(Context context, int textViewResourceId,
-                               ArrayList<POI> POIList) {
-            super(context, textViewResourceId, POIList);
-            this.POIList = new ArrayList<POI>();
-            this.POIList.addAll(POIList);
-        }
-
-        private class ViewHolder {
-            CheckBox name;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-
-            ViewHolder holder = null;
-            Log.v("ConvertView", String.valueOf(position));
-
-            if (convertView == null) {
-                LayoutInflater vi = (LayoutInflater) getSystemService(
-                        Context.LAYOUT_INFLATER_SERVICE);
-                convertView = vi.inflate(R.layout.country_info, null);
-
-                holder = new ViewHolder();
-                holder.name = (CheckBox) convertView.findViewById(R.id.checkBox1);
-                convertView.setTag(holder);
-
-            } else {
-                holder = (ViewHolder) convertView.getTag();
-            }
-
-            POI POI = POIList.get(position);
-            holder.name.setText(POI.getName());
-            holder.name.setChecked(POI.isSelected());
-            holder.name.setTag(POI);
-            holder.name.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    CheckBox cb = (CheckBox) v;
-                    POI p = (POI) cb.getTag();
-                    p.setSelected(cb.isChecked());
-                }
-            });
-            return convertView;
-
-        }
-
-    }
 
     //TOAST CE QUON A COCHE
     private String getSelectedCheckbox() {
         String selected = "";
 
-        ArrayList<POI> POIList = dataAdapter.POIList;
+        ArrayList<POI> POIList = dataAdapter.getPOIList();
         for (int i = 0; i < POIList.size(); i++) {
 
             POI p = POIList.get(i);

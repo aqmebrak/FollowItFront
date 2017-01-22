@@ -1,4 +1,4 @@
-package polytech.followit;
+package polytech.followit.model;
 
 /**
  * Created by Akme on 20/01/2017.
@@ -21,7 +21,4 @@ public class Instruction {
         this.instruction = instruction;
     }
 
-    public void setNodeToGoTo(String nodeToGoTo) {
-        this.nodeToGoTo = nodeToGoTo;
-    }
 }

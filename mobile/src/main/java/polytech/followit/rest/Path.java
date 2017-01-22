@@ -1,22 +1,20 @@
 package polytech.followit.rest;
 
-import android.content.Context;
 import android.util.Log;
 
-import polytech.followit.Node;
+import polytech.followit.model.Node;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
-import polytech.followit.POI;
+import polytech.followit.model.POI;
 
 public class Path {
 
