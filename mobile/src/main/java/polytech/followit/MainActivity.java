@@ -1,6 +1,7 @@
 package polytech.followit;
 
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +27,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 
+import com.estimote.sdk.SystemRequirementsChecker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -45,6 +48,7 @@ import polytech.followit.model.Node;
 import polytech.followit.model.POI;
 import polytech.followit.rest.Path;
 import polytech.followit.rest.SocketCallBack;
+import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.service.BroadcastResponseReceiver;
 
 public class MainActivity extends AppCompatActivity implements
@@ -72,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements
     //POI DE DEPART ET DESTINATION
     public String depart;
     public String arrivee;
+    ProgressDialog progressDialog;
 
     //SOCKET CLASS
     Path path;
@@ -87,6 +92,8 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // hide progressbar so it doesn't appear at first
+        findViewById(R.id.pb).setVisibility(View.GONE);
 
         // Build a new GoogleApiClient for the Wearable API
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -109,17 +116,34 @@ public class MainActivity extends AppCompatActivity implements
         listSpinner.setOnItemSelectedListener(this);
 
         // Service part
-        //startService(new Intent(this, BeaconMonitoringService.class));
-        //filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
-        //LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+        startService(new Intent(this, BeaconMonitoringService.class));
+        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
         //POURQUOI ? SINON CA AFFICHE QUAND MEME....
+        ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
+        pb.setVisibility(View.GONE);
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Loading...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(true);
+        progressDialog.show();
+
     }
 
 
     @Override
     protected void onResume() {
         super.onResume();
+        //On réaffiche le bouton au lieu du progressbar
+        ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
+        pb.setVisibility(View.GONE);
+        Button getPathButton = (Button) findViewById(R.id.getPathButton);
+        getPathButton.setVisibility(View.VISIBLE);
+
+        //truc
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED
                 || ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
             String[] permissions = new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.ACCESS_FINE_LOCATION};
@@ -127,8 +151,8 @@ public class MainActivity extends AppCompatActivity implements
         }
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        //googleApiClient.connect();
-        //SystemRequirementsChecker.checkWithDefaultDialogs(this);
+        googleApiClient.connect();
+        SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
     @Override
@@ -145,9 +169,11 @@ public class MainActivity extends AppCompatActivity implements
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.getPathButton:
-
+                Log.d(TAG, "click");
                 Button getPathButton = (Button) findViewById(R.id.getPathButton);
                 getPathButton.setVisibility(View.GONE);
+                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
+                pb.setVisibility(View.VISIBLE);
 
                 Timer timer = new Timer();
                 TimerTask myTask = new TimerTask() {
@@ -159,7 +185,6 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     }
                 };
-
                 timer.schedule(myTask, 2000, 2000);
                 break;
         }
@@ -212,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 //Generate list View from ArrayList
                 displayListView(list);
+                progressDialog.hide();
             }
         });
     }
@@ -262,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
             //On appelle le socket.emit demandant le chemin
-            Log.d(TAG,"GETPATH JSON : " + itinerary.toString());
+            Log.d(TAG, "GETPATH JSON : " + itinerary.toString());
             path.askForPath(itinerary);
         }
     }
