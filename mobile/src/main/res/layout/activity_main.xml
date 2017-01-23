@@ -70,7 +70,7 @@
 
             <ListView
                 android:layout_width="match_parent"
-                android:layout_height="319dp"
+                android:layout_height="wrap_content"
                 android:id="@+id/poi_list" />
         </LinearLayout>
 
@@ -78,15 +78,11 @@
 
     <Button
         android:id="@+id/getPathButton"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="38dp"
         android:elevation="0dp"
-        android:text="Get Path" />
-
-    <ProgressBar
-        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Small"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/pb" />
+        android:text="Get Path"
+        android:background="@drawable/get_path_button_bg"
+        android:layout_marginLeft="25dp"/>
 
 </LinearLayout>
