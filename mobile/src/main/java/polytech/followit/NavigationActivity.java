@@ -2,17 +2,22 @@ package polytech.followit;
 
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -32,24 +37,33 @@ import polytech.followit.rest.SocketCallBack;
  * Created by Akme on 19/01/2017.
  */
 
-public class NavigationActivity extends AppCompatActivity
-        implements SensorEventListener,
+public class NavigationActivity extends AppCompatActivity implements
+        SensorEventListener,
         View.OnClickListener,
         SocketCallBack {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
 
-    // define the display assembly compass picture
-    private ImageView image;
+    /**
+     * variables for sensor
+     **/
+    private SensorManager sensorManager;
+    private Sensor sensorAccelerometer;
+    private Sensor sensorMagneticField;
 
-    // record the compass picture angle turned
-    private float currentDegree = 0f;
+    private float[] valuesAccelerometer;
+    private float[] valuesMagneticField;
+    private float[] matrixR;
+    private float[] matrixI;
+    private float[] matrixValues;
 
-    // device sensor manager
-    private SensorManager mSensorManager;
+    private ImageView navigation;
+    private final int NUMBER_OF_MEASUREMENT = 5;
+    private final double MIN_DIFF_FOR_EVENT = 5;
+    private ArrayList<Double> valuesAzimuth;
+    private double lastAzimuth;
 
-    //Pour DEBUG le compass
-    TextView tvHeading;
+    private Location location;
 
     //recupere la liste en RAW de la navigation
     ArrayList<Node> listNavigation = null;
@@ -69,6 +83,22 @@ public class NavigationActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.navigation_activity);
 
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+
+        valuesAccelerometer = new float[3];
+        valuesMagneticField = new float[3];
+        matrixR = new float[9];
+        matrixI = new float[9];
+        matrixValues = new float[3];
+
+        valuesAzimuth = new ArrayList<>();
+        lastAzimuth = 360;
+
+        navigation = (ImageView) findViewById(R.id.navigation);
+        navigation.setImageResource(R.drawable.ic_navigation_black_24dp);
+
         p = new Path(this);
 
         //RECUPERE LES DONNES
@@ -76,20 +106,11 @@ public class NavigationActivity extends AppCompatActivity
         p.source = bundle.getString("source");
         p.destination = bundle.getString("destination");
         listNavigation = (ArrayList<Node>) getIntent().getSerializableExtra("nodeList");
-
+        location = (Location) bundle.getParcelable("location");
 
         Log.d("NAVIGATION:", listNavigation.toString());
 
         prepareNavigationList();
-
-        //on chage l'image du compass
-        image = (ImageView) findViewById(R.id.imageViewCompass);
-
-        // TextView that will tell the user what degree is he heading
-        tvHeading = (TextView) findViewById(R.id.tvHeading);
-
-        // initialize your android device sensor capabilities
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         //button listeners
         Button b = (Button) findViewById(R.id.previous_button);
@@ -139,19 +160,17 @@ public class NavigationActivity extends AppCompatActivity
 
     @Override
     protected void onResume() {
-        super.onResume();
+        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, sensorMagneticField, SensorManager.SENSOR_DELAY_UI);
 
-        // for the system's orientation sensor registered listeners
-        mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
-                SensorManager.SENSOR_DELAY_GAME);
+        super.onResume();
     }
 
     @Override
     protected void onPause() {
+        sensorManager.unregisterListener(this, sensorAccelerometer);
+        sensorManager.unregisterListener(this, sensorMagneticField);
         super.onPause();
-
-        // to stop the listener and save battery
-        mSensorManager.unregisterListener(this);
     }
 
     @Override
@@ -174,35 +193,6 @@ public class NavigationActivity extends AppCompatActivity
                 }
                 break;
         }
-    }
-
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        // get the angle around the z-axis rotated
-        float degree = Math.round(event.values[0]);
-
-        tvHeading.setText("Heading: " + Float.toString(degree) + " degrees");
-
-        // create a rotation animation (reverse turn degree degrees)
-        RotateAnimation ra = new RotateAnimation(currentDegree, -degree, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-
-        // how long the animation will take place
-        ra.setDuration(210);
-
-        // set the animation after the end of the reservation status
-        ra.setFillAfter(true);
-
-        // Start the animation
-        image.startAnimation(ra);
-        currentDegree = -degree;
-
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        // not in use
     }
 
     @Override
@@ -248,5 +238,65 @@ public class NavigationActivity extends AppCompatActivity
     @Override
     public void POIListNotification(ArrayList<POI> list) {
         //NOT USED
+    }
+
+    //==============================================================================================
+    // Sensors implementation
+    //==============================================================================================
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+
+        switch (event.sensor.getType()) {
+            case Sensor.TYPE_ACCELEROMETER:
+                System.arraycopy(event.values, 0, valuesAccelerometer, 0, 3);
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                System.arraycopy(event.values, 0, valuesMagneticField, 0, 3);
+                break;
+        }
+
+        boolean success = SensorManager.getRotationMatrix(matrixR, matrixI, valuesAccelerometer, valuesMagneticField);
+
+        if (success) {
+            SensorManager.getOrientation(matrixR, matrixValues);
+            double azimuth = matrixValues[0];
+
+            if (Math.abs(lastAzimuth - Math.toDegrees(azimuth)) > MIN_DIFF_FOR_EVENT) {
+
+                if (valuesAzimuth.size() == NUMBER_OF_MEASUREMENT) {
+                    double sumSin = 0;
+                    double sumCos = 0;
+                    for (double value : valuesAzimuth) {
+                        sumSin += Math.sin(value);
+                        sumCos += Math.cos(value);
+                    }
+                    azimuth = Math.toDegrees(Math.atan2(sumSin, sumCos)) +
+                            Math.toRadians(getGeomagneticField(location).getDeclination());
+                    valuesAzimuth.clear();
+                    navigation.setRotation((float) (-azimuth));
+
+
+                    lastAzimuth = azimuth;
+                } else valuesAzimuth.add(azimuth);
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    //==============================================================================================
+    // Functions utils
+    //==============================================================================================
+
+    private GeomagneticField getGeomagneticField(Location location) {
+        return new GeomagneticField(
+                (float) location.getLatitude(),
+                (float) location.getLongitude(),
+                (float) location.getAltitude(),
+                System.currentTimeMillis());
     }
 }

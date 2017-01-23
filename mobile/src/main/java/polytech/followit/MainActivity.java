@@ -2,11 +2,18 @@ package polytech.followit;
 
 
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -31,6 +38,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
@@ -38,8 +47,13 @@ import polytech.followit.rest.Path;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BroadcastResponseReceiver;
 
-public class MainActivity extends AppCompatActivity implements SocketCallBack,GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, AdapterView.OnItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements
+        SocketCallBack,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        View.OnClickListener,
+        AdapterView.OnItemSelectedListener,
+        LocationListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -47,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     private PutDataMapRequest mapRequest;
     private PutDataRequest request;
     private static ArrayList<String> instructions;
+
+    private LocationManager locationManager;
+    private Location location;
 
     // Service variables
     private IntentFilter filter;
@@ -61,9 +78,9 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
 
     MyCustomAdapter dataAdapter = null;
 
-    /***********************************/
-    /**          LIFECYCLES           **/
-    /***********************************/
+    //==============================================================================================
+    // Lifecycle
+    //==============================================================================================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,6 +124,13 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     @Override
     protected void onResume() {
         super.onResume();
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED
+                || ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+            String[] permissions = new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.ACCESS_FINE_LOCATION};
+            ActivityCompat.requestPermissions(this, permissions, PackageManager.PERMISSION_GRANTED);
+        }
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
         //googleApiClient.connect();
         //SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
@@ -125,19 +149,24 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.getPathButton:
-                //on recupere le val du checkbox list
-                if (depart != null) {
-                    arrivee = getSelectedCheckbox();
-                    if (arrivee != null) {
-                        Log.d(TAG, "ONCLICKBUTTON" + depart + " " +  arrivee);
-                        getPath();
-                    }
-                }
-                //display progressbar
+
                 Button getPathButton = (Button) findViewById(R.id.getPathButton);
                 getPathButton.setVisibility(View.GONE);
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.VISIBLE);
+
+                Timer timer = new Timer();
+                TimerTask myTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (location != null) {
+                            onPathClicked();
+                            this.cancel();
+                        }
+                    }
+                };
+
+                timer.schedule(myTask, 2000, 2000);
                 break;
         }
     }
@@ -156,16 +185,6 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
-                pb.setVisibility(View.GONE);
-                Button getPathButton = (Button) findViewById(R.id.getPathButton);
-                getPathButton.setVisibility(View.VISIBLE);
-            }
-        });
-
         /*
          * SWITCHER VUE
          */
@@ -173,6 +192,7 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
         intent.putExtra("nodeList", path);
         intent.putExtra("source", this.path.source);
         intent.putExtra("destination", this.path.destination);
+        intent.putExtra("location", location);
         startActivity(intent);
     }
 
@@ -208,21 +228,6 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
     }
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "onConnected: " + bundle);
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        Log.d(TAG, "onConnectionSuspended: " + cause);
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed: " + connectionResult);
-    }
-
-    @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         depart = (String) parent.getItemAtPosition(position);
         Log.d(TAG, "ITEM SPINNER SELECTED" + depart);
@@ -249,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
                 NodeDestination = p.getNode();
             }
         }
-        Log.d(TAG,"GETPATH: " + nodeSource + " "+ NodeDestination);
+        Log.d(TAG, "GETPATH: " + nodeSource + " " + NodeDestination);
         //si nos deux noeuds ont été bien récupérés, on créé le JSON
         if (!Objects.equals(nodeSource, "") && !Objects.equals(NodeDestination, "")) {
             //on en profite pour enregistrer les noeuds dans PATH
@@ -267,6 +272,17 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
             path.askForPath(itinerary);
         }
     }
+
+    private void onPathClicked() {
+        //on recupere le val du checkbox list
+        if (depart != null) {
+            arrivee = getSelectedCheckbox();
+            if (arrivee != null) {
+                getPath();
+            }
+        }
+    }
+
 
     /***********************************/
     /**          LIST CHECKBOX        **/
@@ -315,5 +331,46 @@ public class MainActivity extends AppCompatActivity implements SocketCallBack,Go
             }
         }
         return selected;
+    }
+
+    //==============================================================================================
+    // Location implementation
+    //==============================================================================================
+
+    @Override
+    public void onLocationChanged(Location location) {
+        this.location = location;
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+    }
+
+    //==============================================================================================
+    // GoogleApiClient service implementation
+    //==============================================================================================
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "onConnected: " + bundle);
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        Log.d(TAG, "onConnectionSuspended: " + cause);
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG, "onConnectionFailed: " + connectionResult);
     }
 }
