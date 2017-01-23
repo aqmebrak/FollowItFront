@@ -44,7 +44,7 @@ class MyCustomAdapter extends ArrayAdapter<POI> {
 
         if (convertView == null) {
             LayoutInflater vi = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = vi.inflate(R.layout.country_info, null);
+            convertView = vi.inflate(R.layout.poi_info, null);
 
             holder = new ViewHolder();
             holder.name = (CheckBox) convertView.findViewById(R.id.checkBox1);

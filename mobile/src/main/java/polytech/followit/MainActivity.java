@@ -2,7 +2,6 @@ package polytech.followit;
 
 
 import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -190,9 +189,8 @@ public class MainActivity extends AppCompatActivity implements
          */
         Intent intent = new Intent(getBaseContext(), NavigationActivity.class);
         intent.putExtra("nodeList", path);
-        Log.d(TAG, this.path.source + this.path.destination);
-        intent.putExtra("source", this.path.source.toString());
-        intent.putExtra("destination", this.path.destination.toString());
+        intent.putExtra("source", this.path.source);
+        intent.putExtra("destination", this.path.destination);
         intent.putExtra("location", location);
         startActivity(intent);
     }
@@ -249,7 +247,6 @@ public class MainActivity extends AppCompatActivity implements
 
         //Pour chaque POI cliqué par l'user, on cherche son noeud correspondant
         for (POI p : path.getPOIList()) {
-            Log.d(TAG, "POILISt: " + p.getName() + " DEST => " + arrivee);
             if (Objects.equals(p.getName(), depart)) {
                 nodeSource = p.getNode();
             } else if (Objects.equals(p.getName(), arrivee)) {
@@ -270,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
             //On appelle le socket.emit demandant le chemin
-            Log.d(TAG, "ASKFORPATH" + itinerary.toString());
+            Log.d(TAG,"GETPATH JSON : " + itinerary.toString());
             path.askForPath(itinerary);
         }
     }
@@ -280,7 +277,6 @@ public class MainActivity extends AppCompatActivity implements
         if (depart != null) {
             arrivee = getSelectedCheckbox();
             if (arrivee != null) {
-                Log.d(TAG, "ONCLICKBUTTON" + depart + " " + arrivee);
                 getPath();
             }
         }
@@ -294,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements
     private void displayListView(ArrayList<POI> POIList) {
         //create an ArrayAdaptar from the String Array
         dataAdapter = new MyCustomAdapter(this,
-                R.layout.country_info, POIList);
+                R.layout.poi_info, POIList);
         ListView listView = (ListView) findViewById(R.id.poi_list);
         // Assign adapter to ListView
         listView.setAdapter(dataAdapter);
@@ -320,8 +316,6 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
-
-    //TOAST CE QUON A COCHE
     private String getSelectedCheckbox() {
         String selected = "";
 

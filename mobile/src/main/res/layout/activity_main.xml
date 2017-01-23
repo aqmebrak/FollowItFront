@@ -3,44 +3,78 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:weightSum="1"
     tools:context="polytech.followit.MainActivity">
 
-    <TextView
-        android:text="Choisissez votre lieu de départ"
+    <android.support.v7.widget.CardView
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/card_view"
+        android:layout_gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textAlignment="center" />
+        card_view:cardCornerRadius="4dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp">
 
-    <Spinner
-        android:id="@+id/select_shops_spinner"
-        android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:layout_marginTop="17dp" />
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <TextView
-        android:text="Choisissez votre lieu d'arrivée"
+            <TextView
+                android:text="Choisissez votre lieu de départ"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textAlignment="center" />
+
+            <Spinner
+                android:id="@+id/select_shops_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="17dp"
+                android:layout_marginBottom="16dp" />
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/card_view2"
+        android:layout_gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView2"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:textAlignment="center" />
+        card_view:cardCornerRadius="4dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp">
 
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="312dp"
-        android:id="@+id/poi_list" />
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-    <TextView
-        android:text="TextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/result_tv"
-        android:layout_above="@+id/pb" />
+            <TextView
+                android:text="Choisissez votre lieu d'arrivée"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView2"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textAlignment="center" />
+
+            <ListView
+                android:layout_width="match_parent"
+                android:layout_height="319dp"
+                android:id="@+id/poi_list" />
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
 
     <Button
         android:id="@+id/getPathButton"
@@ -54,6 +88,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/pb" />
-
 
 </LinearLayout>
