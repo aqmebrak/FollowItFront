@@ -87,8 +87,6 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // hide progressbar so it doesn't appear at first
-        findViewById(R.id.pb).setVisibility(View.GONE);
 
         // Build a new GoogleApiClient for the Wearable API
         googleApiClient = new GoogleApiClient.Builder(this)
@@ -116,8 +114,6 @@ public class MainActivity extends AppCompatActivity implements
         //LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
         //POURQUOI ? SINON CA AFFICHE QUAND MEME....
-        ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
-        pb.setVisibility(View.GONE);
     }
 
 
@@ -152,8 +148,6 @@ public class MainActivity extends AppCompatActivity implements
 
                 Button getPathButton = (Button) findViewById(R.id.getPathButton);
                 getPathButton.setVisibility(View.GONE);
-                ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
-                pb.setVisibility(View.VISIBLE);
 
                 Timer timer = new Timer();
                 TimerTask myTask = new TimerTask() {
