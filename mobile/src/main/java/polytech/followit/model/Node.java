@@ -1,5 +1,7 @@
 package polytech.followit.model;
 
+import android.support.annotation.Nullable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -8,29 +10,52 @@ public class Node implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String name;
-    private ArrayList<String> poi;
-    private String instruction;
+    private ArrayList<POI> poi;
+    private Instruction instruction;
+    private double xCoord, yCoord;
+    private Beacon beacon;
 
-    public Node(String name, ArrayList<String> poi, String instruction) {
+    public Node(String name, ArrayList<POI> poi, Instruction instruction, double xCoord, double yCoord, @Nullable Beacon beacon) {
         this.name = name;
         this.poi = poi;
         this.instruction = instruction;
+        this.xCoord = xCoord;
+        this.yCoord = yCoord;
+        this.beacon = beacon;
     }
 
     public String getName() {
         return name;
     }
 
-    public ArrayList<String> getPoi() {
+    public ArrayList<POI> getPoi() {
         return poi;
     }
 
-    public String getInstruction() {
+    public Instruction getInstruction() {
         return instruction;
+    }
+
+    public double getxCoord() {
+        return xCoord;
+    }
+
+    public double getyCoord() {
+        return yCoord;
+    }
+
+    public Beacon getBeacon() {
+        return beacon;
     }
 
     @Override
     public String toString() {
-        return name + " " + poi.toString() + " " + instruction;
+        return "Node{" +
+                "name='" + name + '\'' +
+                ", poi=" + poi +
+                ", instruction='" + instruction + '\'' +
+                ", xCoord=" + xCoord +
+                ", yCoord=" + yCoord +
+                '}';
     }
 }

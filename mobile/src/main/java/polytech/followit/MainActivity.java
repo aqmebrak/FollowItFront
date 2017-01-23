@@ -46,10 +46,12 @@ import java.util.TimerTask;
 
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
-import polytech.followit.rest.Path;
+import polytech.followit.model.Path;
+import polytech.followit.rest.GetPath;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.service.BroadcastResponseReceiver;
+import polytech.followit.utility.PathSingleton;
 
 public class MainActivity extends AppCompatActivity implements
         SocketCallBack,
@@ -64,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements
     private GoogleApiClient googleApiClient;
     private PutDataMapRequest mapRequest;
     private PutDataRequest request;
-    private static ArrayList<String> instructions;
 
     private LocationManager locationManager;
     private Location location;
@@ -77,9 +78,6 @@ public class MainActivity extends AppCompatActivity implements
     public String depart;
     public String arrivee;
     ProgressDialog progressDialog;
-
-    //SOCKET CLASS
-    Path path;
 
     MyCustomAdapter dataAdapter = null;
 
@@ -103,22 +101,23 @@ public class MainActivity extends AppCompatActivity implements
                 .build();
         googleApiClient.connect();
 
-        path = new Path(this);
+        PathSingleton.getInstance().setSocketCallBack(this);
 
         Button getPathButton = (Button) findViewById(R.id.getPathButton);
 
         Log.d(TAG, "GET POI LIST");
         //GET POI LIST
-        path.askPOIList();
+        PathSingleton.getInstance().askPOIList();
+
         // Set listeners
         getPathButton.setOnClickListener(this);
         Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
         listSpinner.setOnItemSelectedListener(this);
 
         // Service part
-        startService(new Intent(this, BeaconMonitoringService.class));
-        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+        //startService(new Intent(this, BeaconMonitoringService.class));
+        //filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
+        //LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
         //POURQUOI ? SINON CA AFFICHE QUAND MEME....
         ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
@@ -151,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        googleApiClient.connect();
+        //googleApiClient.connect();
         SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
@@ -191,52 +190,39 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onPathFetched(final ArrayList<Node> path) throws JSONException {
-        instructions = new ArrayList<>();
+    public void onPathFetched() throws JSONException {
 
-        for (int i = 0; i < path.size(); i++) {
-            instructions.add(path.get(i).getInstruction());
-        }
-
-        // Todo: Tableau d'indications à mettre
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/startActivity");
-        putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
+        putDataMapReq.getDataMap().putStringArrayList("instructions", PathSingleton.getInstance().getPath().listInstructionsToStringArray());
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
-        /*
-         * SWITCHER VUE
-         */
-        Intent intent = new Intent(getBaseContext(), NavigationActivity.class);
-        intent.putExtra("nodeList", path);
-        intent.putExtra("source", this.path.source);
-        intent.putExtra("destination", this.path.destination);
+        Intent intent = new Intent(this, NavigationActivity.class);
         intent.putExtra("location", location);
         startActivity(intent);
     }
 
     @Override
-    public void POIListNotification(final ArrayList<POI> list) {
-        Log.d(TAG, "NOTIF: POI LIST" + list.toString());
+    public void onPOIListFetched() {
+        Log.d(TAG, "NOTIF: POI LIST" + PathSingleton.getInstance().getListPOI().toString());
 
-        final ArrayList<String> POIonly = new ArrayList<>();
+        final ArrayList<String> POInameSpinner = new ArrayList<>();
 
-        for (POI p : list) {
-            POIonly.add(p.getName());
-        }
+        for (POI p : PathSingleton.getInstance().getListPOI())
+            POInameSpinner.add(p.getName());
 
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 //Liste Dropdown pour le départ
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_spinner_item, POIonly);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_spinner_item, POInameSpinner);
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
                 Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
                 listSpinner.setAdapter(adapter);
 
                 //Generate list View from ArrayList
-                displayListView(list);
+                displayListView(PathSingleton.getInstance().getListPOI());
                 progressDialog.hide();
             }
         });
@@ -244,7 +230,6 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBroadcastNotification(final String message) {
-        //NOT USED
     }
 
     @Override
@@ -255,8 +240,8 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
-
     }
+
     /***********************************/
     /**          FUNCTIONS            **/
     /***********************************/
@@ -264,32 +249,32 @@ public class MainActivity extends AppCompatActivity implements
     private void getPath() {
         //NOEUD DEPART ET ARRIVEE
         String nodeSource = "";
-        String NodeDestination = "";
+        String nodeDestination = "";
 
         //Pour chaque POI cliqué par l'user, on cherche son noeud correspondant
-        for (POI p : path.getPOIList()) {
+        for (POI p : PathSingleton.getInstance().getListPOI()) {
             if (Objects.equals(p.getName(), depart)) {
                 nodeSource = p.getNode();
             } else if (Objects.equals(p.getName(), arrivee)) {
-                NodeDestination = p.getNode();
+                nodeDestination = p.getNode();
             }
         }
-        Log.d(TAG, "GETPATH: " + nodeSource + " " + NodeDestination);
+        Log.d(TAG, "GETPATH: " + nodeSource + " " + nodeDestination);
         //si nos deux noeuds ont été bien récupérés, on créé le JSON
-        if (!Objects.equals(nodeSource, "") && !Objects.equals(NodeDestination, "")) {
+        if (!Objects.equals(nodeSource, "") && !Objects.equals(nodeDestination, "")) {
             //on en profite pour enregistrer les noeuds dans PATH
-            path.source = nodeSource;
-            path.destination = NodeDestination;
+            PathSingleton.getInstance().getPath().setSource(nodeSource);
+            PathSingleton.getInstance().getPath().setDestination(nodeDestination);
             JSONObject itinerary = new JSONObject();
             try {
                 itinerary.put("source", nodeSource);
-                itinerary.put("destination", NodeDestination);
+                itinerary.put("destination", nodeDestination);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             //On appelle le socket.emit demandant le chemin
-            Log.d(TAG, "GETPATH JSON : " + itinerary.toString());
-            path.askForPath(itinerary);
+            Log.d(TAG,"GETPATH JSON : " + itinerary.toString());
+            PathSingleton.getInstance().askForPath(itinerary);
         }
     }
 
@@ -322,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements
                 // When clicked, show a toast with the TextView text
                 POI poi = (POI) parent.getItemAtPosition(position);
                 CheckBox cb = (CheckBox) view.findViewById(R.id.checkBox1);
-                if (poi.getName() != path.source) {
+                if (!Objects.equals(poi.getName(), PathSingleton.getInstance().getPath().getSource())) {
                     if (poi.isSelected()) {
                         poi.setSelected(false);
                         cb.setChecked(false);
@@ -331,8 +316,6 @@ public class MainActivity extends AppCompatActivity implements
                         cb.setChecked(true);
                     }
                 }
-
-
             }
         });
     }

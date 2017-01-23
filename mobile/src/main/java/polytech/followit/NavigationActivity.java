@@ -2,19 +2,14 @@ package polytech.followit;
 
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.hardware.GeomagneticField;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -30,12 +25,8 @@ import java.util.ArrayList;
 import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
-import polytech.followit.rest.Path;
+import polytech.followit.rest.GetPath;
 import polytech.followit.rest.SocketCallBack;
-
-/**
- * Created by Akme on 19/01/2017.
- */
 
 public class NavigationActivity extends AppCompatActivity implements
         SensorEventListener,
@@ -76,7 +67,7 @@ public class NavigationActivity extends AppCompatActivity implements
     //Instruction en cours
     Instruction ongoingInstruction;
 
-    Path p;
+    GetPath p;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +90,7 @@ public class NavigationActivity extends AppCompatActivity implements
         navigation = (ImageView) findViewById(R.id.navigation);
         navigation.setImageResource(R.drawable.ic_navigation_black_24dp);
 
-        p = new Path(this);
+        p = new GetPath(this);
 
         //RECUPERE LES DONNES
         Bundle bundle = getIntent().getExtras();
@@ -236,7 +227,7 @@ public class NavigationActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void POIListNotification(ArrayList<POI> list) {
+    public void onPOIListFetched(ArrayList<POI> list) {
         //NOT USED
     }
 
@@ -278,6 +269,11 @@ public class NavigationActivity extends AppCompatActivity implements
 
 
                     lastAzimuth = azimuth;
+
+                    /*PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/startActivity");
+                    putDataMapReq.getDataMap().putStringArrayList("instructions", azimuth);
+                    PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
+                    PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);*/
                 } else valuesAzimuth.add(azimuth);
             }
         }

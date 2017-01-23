@@ -1,8 +1,6 @@
 package polytech.followit.model;
 
-/**
- * Created by Akme on 20/01/2017.
- */
+import android.support.annotation.Nullable;
 
 public class Instruction {
 
@@ -10,15 +8,13 @@ public class Instruction {
     public String nodeFrom;
     public String instruction;
 
-    public Instruction(String nodeFrom, String instruction) {
-        this.nodeFrom = nodeFrom;
-        this.instruction = instruction;
-    }
-
-    public Instruction(String nodeToGoTo, String nodeFrom, String instruction) {
+    public Instruction(@Nullable String nodeToGoTo, @Nullable String nodeFrom, String instruction) {
         this.nodeToGoTo = nodeToGoTo;
         this.nodeFrom = nodeFrom;
         this.instruction = instruction;
     }
 
+    public String getInstruction() {
+        return instruction;
+    }
 }

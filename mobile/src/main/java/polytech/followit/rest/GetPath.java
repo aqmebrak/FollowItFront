@@ -2,6 +2,8 @@ package polytech.followit.rest;
 
 import android.util.Log;
 
+import polytech.followit.model.Beacon;
+import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 
 import org.json.JSONArray;
@@ -15,22 +17,20 @@ import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 import polytech.followit.model.POI;
+import polytech.followit.model.Path;
 
-public class Path {
+public class GetPath {
 
     // This is the reference to the associated listener
     public SocketCallBack socketCallBack;
 
-    public final String TAG = Path.class.getSimpleName();
+    public final String TAG = GetPath.class.getSimpleName();
     public Socket socket;
     //Liste navigation
     public ArrayList<Node> result;
     //List POI avec leur node associé
-    public ArrayList<POI> POIList;
-    public String source;
-    public String destination;
 
-    public Path(final SocketCallBack socketCallBack) {
+    public GetPath(final SocketCallBack socketCallBack) {
         this.socketCallBack = socketCallBack;
         try {
             socket = IO.socket("https://followit-backend.herokuapp.com/");
@@ -47,8 +47,6 @@ public class Path {
 
             @Override
             public void call(Object... args) {
-                Log.d(TAG, "PATH SOCKET CALLBACK");
-
                 buildPathWithNodes(args);
             }
 
@@ -58,7 +56,9 @@ public class Path {
             public void call(Object... args) {
                 JSONObject response = (JSONObject) args[0];
 
-                POIList = new ArrayList<POI>();
+                ArrayList<POI> POIList;
+
+                POIList = new ArrayList<>();
                 Log.d(TAG, "call: POI LIST" + response.toString());
                 try {
                     JSONArray a = (JSONArray) response.get("poi");
@@ -69,7 +69,7 @@ public class Path {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                socketCallBack.POIListNotification(POIList);
+                socketCallBack.onPOIListFetched(POIList);
             }
 
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -91,10 +91,6 @@ public class Path {
         socket.connect();
     }
 
-    public ArrayList<POI> getPOIList() {
-        return POIList;
-    }
-
     public void askForPath(JSONObject param) {
         Log.d(TAG, "ASKING PATH SOCKET");
         socket.emit("askPath", param);
@@ -105,28 +101,64 @@ public class Path {
     }
 
     private void buildPathWithNodes(Object... args) {
-        String node_name, node_instruction;
-        ArrayList<String> node_poi;
-        result = new ArrayList<>();
+        String node_name;
+        ArrayList<POI> node_poi;
+        Instruction node_instruction;
+        double node_xCoord, node_yCoord;
+        Beacon node_beacon = null;
+
+        Path path = new Path();
 
         try {
             JSONObject response = (JSONObject) args[0];
-            JSONArray path = response.getJSONArray("map");
+            JSONArray arrayPath = response.getJSONArray("map");
+            JSONObject currentNode;
 
-            // create Node objects
-            for (int i = 0; i < path.length(); i++) {
-                node_name = path.getJSONObject(i).getString("node");
-
-                // create Node's node_poi
+            // Create nodes
+            for (int i = 0; i < arrayPath.length(); i++) {
+                currentNode = arrayPath.getJSONObject(i);
                 node_poi = new ArrayList<>();
-                for (int j = 0; j < path.getJSONObject(i).getJSONArray("POIList").length(); j++)
-                    node_poi.add((String) path.getJSONObject(i).getJSONArray("POIList").get(j));
-                node_instruction = path.getJSONObject(i).getString("instruction");
-                result.add(new Node(node_name, node_poi, node_instruction));
-            }
 
-            Log.d(TAG, "result : " + result);
-            socketCallBack.onPathFetched(result);
+                // name
+                node_name = currentNode.getString("currentNode");
+
+                // poi
+                for (int j = 0; j < currentNode.getJSONArray("POIList").length(); j++) {
+                    String poi_name = (String) currentNode.getJSONArray("POIList").get(j);
+                    POI poi = new POI(poi_name, node_name, false);
+                    node_poi.add(poi);
+                }
+
+                // instruction
+                node_instruction = new Instruction(null, null, currentNode.getString("instruction"));
+
+                // coordinate
+                node_xCoord = currentNode.getJSONObject("coord").getDouble("x");
+                node_yCoord = currentNode.getJSONObject("coord").getDouble("y");
+
+                // beacon
+                if (currentNode.has("beacon")) {
+                    node_beacon = new Beacon(
+                            currentNode.getJSONObject("beacon").getString("name"),
+                            currentNode.getJSONObject("beacon").getString("UUID"),
+                            currentNode.getJSONObject("beacon").getInt("major"),
+                            currentNode.getJSONObject("beacon").getInt("minor")
+                    );
+                }
+
+                // Node final object
+                Node node = new Node(
+                        node_name,
+                        node_poi,
+                        node_instruction,
+                        node_xCoord,
+                        node_yCoord,
+                        node_beacon
+                );
+
+                path.getListNodes().add(node);
+
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
