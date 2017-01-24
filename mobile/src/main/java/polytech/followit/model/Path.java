@@ -4,9 +4,9 @@ import java.util.ArrayList;
 
 public class Path {
 
-    private ArrayList<Node> listNodes;
-    private ArrayList<Instruction> listInstructions;
-    private String source, destination;
+    private ArrayList<Node> listNodes = new ArrayList<>();
+    private ArrayList<Instruction> listInstructions = new ArrayList<>();
+    private String source = null, destination = null;
 
     public Path() {
     }

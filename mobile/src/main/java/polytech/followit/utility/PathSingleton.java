@@ -17,12 +17,11 @@ import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
 import polytech.followit.model.Path;
-import polytech.followit.rest.GetPath;
 import polytech.followit.rest.SocketCallBack;
 
 public class PathSingleton {
 
-    private final String TAG = GetPath.class.getSimpleName();
+    private final String TAG = PathSingleton.class.getSimpleName();
     private static PathSingleton ourInstance = new PathSingleton();
 
     private Path path;
@@ -31,31 +30,10 @@ public class PathSingleton {
     private SocketCallBack socketCallBack;
     private Socket socket;
 
+    int fecth = 0;
+
     private PathSingleton() {
-    }
-
-    //==============================================================================================
-    // getter and setter
-    //==============================================================================================
-
-    public static PathSingleton getInstance() {
-        return ourInstance;
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public void setPath(Path path) {
-        this.path = path;
-    }
-
-    public SocketCallBack getSocketCallBack() {
-        return socketCallBack;
-    }
-
-    public void setSocketCallBack(final SocketCallBack socketCallBack) {
-        this.socketCallBack = socketCallBack;
+        path = new Path();
         try {
             socket = IO.socket("https://followit-backend.herokuapp.com/");
         } catch (URISyntaxException e) {
@@ -100,6 +78,30 @@ public class PathSingleton {
         socket.connect();
     }
 
+    //==============================================================================================
+    // getter and setter
+    //==============================================================================================
+
+    public static PathSingleton getInstance() {
+        return ourInstance;
+    }
+
+    public Path getPath() {
+        return path;
+    }
+
+    public void setPath(Path path) {
+        this.path = path;
+    }
+
+    public SocketCallBack getSocketCallBack() {
+        return socketCallBack;
+    }
+
+    public void setSocketCallBack(final SocketCallBack socketCallBack) {
+        this.socketCallBack = socketCallBack;
+    }
+
     public Socket getSocket() {
         return socket;
     }
@@ -130,15 +132,17 @@ public class PathSingleton {
     }
 
     private static void buildPathWithNodes(Object... args) {
+        Log.d(getInstance().TAG, "BUILDPATHWITHNODES");
+
+        //on clean d'abord les ARRAY de Path
+        getInstance().getPath().getListInstructions().clear();
+        getInstance().getPath().getListNodes().clear();
+
         String node_name;
         ArrayList<POI> node_poi;
         Instruction node_instruction;
         double node_xCoord, node_yCoord;
         Beacon node_beacon = null;
-
-        ArrayList<Instruction> path_listInstructions;
-
-        Path path = new Path();
 
         try {
             JSONObject response = (JSONObject) args[0];
@@ -149,10 +153,9 @@ public class PathSingleton {
             for (int i = 0; i < arrayPath.length(); i++) {
                 currentNode = arrayPath.getJSONObject(i);
                 node_poi = new ArrayList<>();
-                path_listInstructions = new ArrayList<>();
 
                 // name
-                node_name = currentNode.getString("currentNode");
+                node_name = currentNode.getString("node");
 
                 // poi
                 for (int j = 0; j < currentNode.getJSONArray("POIList").length(); j++) {
@@ -164,7 +167,7 @@ public class PathSingleton {
                 // instruction
                 Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"));
                 node_instruction = instruction;
-                path_listInstructions.add(instruction);
+                getInstance().getPath().getListInstructions().add(instruction);
 
                 // coordinate
                 node_xCoord = currentNode.getJSONObject("coord").getDouble("x");
@@ -190,9 +193,9 @@ public class PathSingleton {
                         node_beacon
                 );
 
-                path.getListNodes().add(node);
-
+                getInstance().getPath().getListNodes().add(node);
             }
+            getInstance().getSocketCallBack().onPathFetched();
         } catch (JSONException e) {
             e.printStackTrace();
         }

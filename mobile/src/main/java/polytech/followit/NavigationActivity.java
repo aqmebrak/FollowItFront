@@ -16,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,8 +26,8 @@ import java.util.ArrayList;
 import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
-import polytech.followit.rest.GetPath;
 import polytech.followit.rest.SocketCallBack;
+import polytech.followit.utility.PathSingleton;
 
 public class NavigationActivity extends AppCompatActivity implements
         SensorEventListener,
@@ -64,10 +65,9 @@ public class NavigationActivity extends AppCompatActivity implements
 
     //index position sur quelle étape on se trouve
     int index = 0;
+
     //Instruction en cours
     Instruction ongoingInstruction;
-
-    GetPath p;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,16 +90,11 @@ public class NavigationActivity extends AppCompatActivity implements
         navigation = (ImageView) findViewById(R.id.navigation);
         navigation.setImageResource(R.drawable.ic_navigation_black_24dp);
 
-        p = new GetPath(this);
+        PathSingleton.getInstance().setSocketCallBack(this);
 
         //RECUPERE LES DONNES
         Bundle bundle = getIntent().getExtras();
-        p.source = bundle.getString("source");
-        p.destination = bundle.getString("destination");
-        listNavigation = (ArrayList<Node>) getIntent().getSerializableExtra("nodeList");
         location = (Location) bundle.getParcelable("location");
-
-        Log.d("NAVIGATION:", listNavigation.toString());
 
         prepareNavigationList();
 
@@ -114,19 +109,22 @@ public class NavigationActivity extends AppCompatActivity implements
     private void prepareNavigationList() {
         //ON PREPARE LA LISTE DES ETAPES
         navigationSteps = new ArrayList<>();
+        listNavigation = PathSingleton.getInstance().getPath().getListNodes();
+        Log.d(TAG, "PREPARENAVIGATIONLIST");
+
         for (int i = 0; i < listNavigation.size(); i++) {
 
             Node n = listNavigation.get(i);
             String text = "Instructions\n";
             //si il y a des instructions
-            if (n.getInstruction() != null && n.getInstruction() != "") {
-                text += n.getInstruction() + "\n";
+            if (!"".equals(n.getInstruction())) {
+                text += n.getInstruction().getInstruction() + "\n";
             }
             //si il y a des POI
             if (n.getPoi() != null && !n.getPoi().isEmpty()) {
                 text += "Points d'interets à proximité: \n";
-                for (String s : n.getPoi()) {
-                    text += "\t- " + s;
+                for (POI s : n.getPoi()) {
+                    text += "\t- " + s.getName();
                 }
             }
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
@@ -135,13 +133,14 @@ public class NavigationActivity extends AppCompatActivity implements
                 navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text));
             } else {
                 //sinon juste le noeud/beacon de depart
-                navigationSteps.add(new Instruction(n.getName(), text));
+                navigationSteps.add(new Instruction(null, n.getName(), text));
             }
         }
         //On affiche la 1ere etape
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                index = 0;
                 TextView t = (TextView) findViewById(R.id.instructions_textView);
                 t.setText(navigationSteps.get(index).instruction);
                 ongoingInstruction = navigationSteps.get(index);
@@ -187,10 +186,9 @@ public class NavigationActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onPathFetched(ArrayList<Node> path) throws JSONException {
+    public void onPathFetched() throws JSONException {
         //NOT USED
-        listNavigation.clear();
-        listNavigation = path;
+        Log.d(TAG, "ON PATH FETCHED");
         prepareNavigationList();
     }
 
@@ -202,8 +200,8 @@ public class NavigationActivity extends AppCompatActivity implements
 
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(NavigationActivity.this)
                         .setSmallIcon(R.drawable.ic_stat_name)
-                        .setContentTitle("Map Update")
-                        .setContentText("Map has been updated, synchronize your navigation steps");
+                        .setContentTitle("Mise `a jour de la carte")
+                        .setContentText("La carte a ete mise a jour, nous avons synchronise votre chemin");
                 NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 // notificationID allows you to update the notification later on.
                 mNotificationManager.notify(1, mBuilder.build());
@@ -213,21 +211,21 @@ public class NavigationActivity extends AppCompatActivity implements
                 //on cherche l'étape active
                 Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
 
-                Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + p.destination);
+                Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
                 JSONObject o = new JSONObject();
                 try {
                     o.put("source", ongoingInstruction.nodeToGoTo);
-                    o.put("destination", p.destination);
+                    o.put("destination", PathSingleton.getInstance().getPath().getDestination());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                p.askForPath(o);
+                PathSingleton.getInstance().askForPath(o);
             }
         });
     }
 
     @Override
-    public void onPOIListFetched(ArrayList<POI> list) {
+    public void onPOIListFetched() {
         //NOT USED
     }
 

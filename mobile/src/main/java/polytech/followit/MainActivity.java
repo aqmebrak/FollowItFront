@@ -15,7 +15,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -44,12 +43,8 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import polytech.followit.model.Node;
 import polytech.followit.model.POI;
-import polytech.followit.model.Path;
-import polytech.followit.rest.GetPath;
 import polytech.followit.rest.SocketCallBack;
-import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.service.BroadcastResponseReceiver;
 import polytech.followit.utility.PathSingleton;
 
@@ -191,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onPathFetched() throws JSONException {
-
+        Log.d(TAG, "ONPATHFETCHED");
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/startActivity");
         putDataMapReq.getDataMap().putStringArrayList("instructions", PathSingleton.getInstance().getPath().listInstructionsToStringArray());
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
@@ -273,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements
                 e.printStackTrace();
             }
             //On appelle le socket.emit demandant le chemin
-            Log.d(TAG,"GETPATH JSON : " + itinerary.toString());
+            Log.d(TAG, "GETPATH JSON : " + itinerary.toString());
             PathSingleton.getInstance().askForPath(itinerary);
         }
     }
