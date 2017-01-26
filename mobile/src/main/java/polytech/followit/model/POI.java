@@ -1,7 +1,9 @@
 package polytech.followit.model;
 
 
-public class POI {
+import java.io.Serializable;
+
+public class POI implements Serializable{
 
     private String name = null;
     private String node = null;

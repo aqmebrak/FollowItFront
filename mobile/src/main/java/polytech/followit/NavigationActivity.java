@@ -294,16 +294,4 @@ public class NavigationActivity extends AppCompatActivity implements
                 System.currentTimeMillis());
     }
 
-    //==============================================================================================
-    // Socket callbacks implementation
-    //==============================================================================================
-
-    @Override
-    public void onBeaconsFetched() {
-    }
-
-    @Override
-    public void onNodesFetched() {
-
-    }
 }

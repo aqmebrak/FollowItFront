@@ -1,6 +1,8 @@
 package polytech.followit.model;
 
-public class Beacon {
+import java.io.Serializable;
+
+public class Beacon implements Serializable{
 
     private String name, UUID;
     private int major, minor;

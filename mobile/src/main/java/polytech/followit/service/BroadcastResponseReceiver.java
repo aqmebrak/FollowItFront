@@ -19,7 +19,7 @@ public class BroadcastResponseReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Intent viewIntent = new Intent(context, MainActivity.class);
         PendingIntent viewPendingIntent = PendingIntent.getActivity(context, 0, viewIntent, 0);
-        createNotification(context,1, R.drawable.ic_play_light,"Titre","Corps de la notification",viewPendingIntent);
+        createNotification(context,1, R.drawable.ic_play_light,"Beacon !","Vous rentrez dans la zone d'un beacon",viewPendingIntent);
     }
 
     private void createNotification(Context context, int nId, int icon, String title, String body, PendingIntent intent) {

@@ -60,6 +60,7 @@ public class ApplicationListener extends Application implements
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
+        Log.d(TAG,"ON DATA CHANGED");
         for (DataEvent event : dataEvents) {
             if (event.getType() == DataEvent.TYPE_CHANGED) {
                 // DataItem changed

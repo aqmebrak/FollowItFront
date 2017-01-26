@@ -1,8 +1,9 @@
 package polytech.followit.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Path {
+public class Path implements Serializable {
 
     private ArrayList<Node> listNodes = new ArrayList<>();
     private ArrayList<Instruction> listInstructions = new ArrayList<>();

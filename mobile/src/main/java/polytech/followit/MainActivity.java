@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -39,6 +40,7 @@ import com.google.android.gms.wearable.Wearable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Timer;
@@ -144,8 +146,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        //googleApiClient.connect();
-        SystemRequirementsChecker.checkWithDefaultDialogs(this);
+        //SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
     @Override
@@ -168,7 +169,8 @@ public class MainActivity extends AppCompatActivity implements
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.VISIBLE);
 
-                Timer timer = new Timer();
+                onPathClicked();
+                /*Timer timer = new Timer();
                 TimerTask myTask = new TimerTask() {
                     @Override
                     public void run() {
@@ -179,7 +181,7 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 };
                 timer.schedule(myTask, 2000, 2000);
-                break;
+                break;*/
         }
     }
 
@@ -191,8 +193,10 @@ public class MainActivity extends AppCompatActivity implements
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
-        // Start service
-        startService(new Intent(this, BeaconMonitoringService.class));
+        // Start service TODO: Change with parcelable ++fast
+        Intent serviceIntent = new Intent(this, BeaconMonitoringService.class);
+        serviceIntent.putExtra("path", PathSingleton.getInstance().getPath());
+        startService(serviceIntent);
         filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
 
@@ -389,19 +393,5 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.d(TAG, "onConnectionFailed: " + result);
-    }
-
-    //==============================================================================================
-    // Socket callbacks implementation
-    //==============================================================================================
-
-    @Override
-    public void onBeaconsFetched() {
-
-    }
-
-    @Override
-    public void onNodesFetched() {
-
     }
 }
