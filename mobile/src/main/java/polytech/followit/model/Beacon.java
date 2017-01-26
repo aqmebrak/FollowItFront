@@ -27,4 +27,14 @@ public class Beacon {
     public int getMinor() {
         return minor;
     }
+
+    @Override
+    public String toString() {
+        return "Beacon{" +
+                "name='" + name + '\'' +
+                ", UUID='" + UUID + '\'' +
+                ", major=" + major +
+                ", minor=" + minor +
+                '}';
+    }
 }

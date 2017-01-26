@@ -33,4 +33,8 @@ public class POI {
     public String getNode() {
         return node;
     }
+
+    public void setNode(String node) {
+        this.node = node;
+    }
 }

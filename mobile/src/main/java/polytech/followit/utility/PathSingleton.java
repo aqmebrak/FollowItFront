@@ -25,12 +25,14 @@ public class PathSingleton {
     private static PathSingleton ourInstance = new PathSingleton();
 
     private Path path;
-    private ArrayList<POI> listPOI;
+    private ArrayList<POI> listAllPoi;
+    private ArrayList<Beacon> listAllBeacons;
+    private ArrayList<Node> listAllNodes;
 
     private SocketCallBack socketCallBack;
     private Socket socket;
 
-    int fecth = 0;
+    private double angleDeviationToNextBeacon;
 
     private PathSingleton() {
         path = new Path();
@@ -59,6 +61,73 @@ public class PathSingleton {
                 buildPOIList(args);
             }
 
+        }).on("beaconArray", new Emitter.Listener() {
+
+            @Override
+            public void call(Object... args) {
+                JSONObject response = (JSONObject) args[0];
+                listAllBeacons = new ArrayList<>();
+                Log.d(TAG,"RESPONSE GETBEACONARRAY : "+response);
+                try {
+                    JSONArray beaconsArray = response.getJSONArray("beaconArray");
+                    for (int i = 0; i < beaconsArray.length(); i++) {
+                        JSONObject beacon = (JSONObject) beaconsArray.get(i);
+                        String name = beacon.getString("name");
+                        String UUID = beacon.getString("UUID");
+                        int major = beacon.getInt("major");
+                        int minor = beacon.getInt("minor");
+                        listAllBeacons.add(new Beacon(name, UUID, major, minor));
+                    }
+                    Log.d(TAG,"LIST ALL BEACONS : "+listAllBeacons.toString());
+                    getInstance().getSocketCallBack().onBeaconsFetched();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).on("allNodes", new Emitter.Listener() {
+            @Override
+            public void call(Object... args) {
+                JSONObject response = (JSONObject) args[0];
+                listAllNodes = new ArrayList<>();
+                Log.d(TAG,"RESPONSE GET ALL NODES" + response);
+                try {
+                    JSONArray nodesArray = response.getJSONArray("nodes");
+                    for (int i = 0; i < nodesArray.length(); i++) {
+                        JSONObject node = nodesArray.getJSONObject(i);
+                        JSONObject node_value = node.getJSONObject("value");
+
+                        String name = node.getString("v");
+
+                        JSONArray poi = node_value.getJSONArray("POI");
+                        ArrayList<POI> listPoi = new ArrayList<>();
+                        for (int j = 0; j < poi.length(); j++) {
+                            POI node_poi = new POI(poi.getString(j),null,false);
+                            listPoi.add(node_poi);
+                        }
+
+                        JSONObject node_value_coord = (JSONObject) node_value.get("coord");
+                        double xCoord = node_value_coord.getDouble("x");
+                        double yCoord = node_value_coord.getDouble("y");
+
+                        Beacon beacon = null;
+                        if (node_value.has("beacon")) {
+                            JSONObject node_value_beacon = node_value.getJSONObject("beacon");
+                            beacon = new Beacon(
+                                    node_value_beacon.getString("name"),
+                                    node_value_beacon.getString("UUID"),
+                                    node_value_beacon.getInt("major"),
+                                    node_value_beacon.getInt("minor")
+                            );
+                        }
+
+                        Node newNode = new Node(name, listPoi, null, xCoord, yCoord, beacon);
+                        listAllNodes.add(newNode);
+                        getInstance().socketCallBack.onNodesFetched();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
 
             @Override
@@ -110,12 +179,36 @@ public class PathSingleton {
         this.socket = socket;
     }
 
-    public ArrayList<POI> getListPOI() {
-        return listPOI;
+    public ArrayList<POI> getListAllPoi() {
+        return listAllPoi;
     }
 
-    public void setListPOI(ArrayList<POI> listPOI) {
-        this.listPOI = listPOI;
+    public void setListAllPoi(ArrayList<POI> listAllPoi) {
+        this.listAllPoi = listAllPoi;
+    }
+
+    public double getAngleDeviationToNextBeacon() {
+        return angleDeviationToNextBeacon;
+    }
+
+    public void setAngleDeviationToNextBeacon(double angleDeviationToNextBeacon) {
+        this.angleDeviationToNextBeacon = angleDeviationToNextBeacon;
+    }
+
+    public ArrayList<Beacon> getListAllBeacons() {
+        return listAllBeacons;
+    }
+
+    public void setListAllBeacons(ArrayList<Beacon> listAllBeacons) {
+        this.listAllBeacons = listAllBeacons;
+    }
+
+    public ArrayList<Node> getListAllNodes() {
+        return listAllNodes;
+    }
+
+    public void setListAllNodes(ArrayList<Node> listAllNodes) {
+        this.listAllNodes = listAllNodes;
     }
 
     //==============================================================================================
@@ -137,6 +230,7 @@ public class PathSingleton {
         //on clean d'abord les ARRAY de Path
         getInstance().getPath().getListInstructions().clear();
         getInstance().getPath().getListNodes().clear();
+        getInstance().getPath().getListNodes().clear();
 
         String node_name;
         ArrayList<POI> node_poi;
@@ -146,6 +240,7 @@ public class PathSingleton {
 
         try {
             JSONObject response = (JSONObject) args[0];
+            Log.d(getInstance().TAG,"BUILD PATH WITH NODES RESPONSE : "+response);
             JSONArray arrayPath = response.getJSONArray("map");
             JSONObject currentNode;
 
@@ -181,6 +276,7 @@ public class PathSingleton {
                             currentNode.getJSONObject("beacon").getInt("major"),
                             currentNode.getJSONObject("beacon").getInt("minor")
                     );
+                    getInstance().getPath().getListBeacons().add(node_beacon);
                 }
 
                 // Node final object
@@ -204,13 +300,13 @@ public class PathSingleton {
     private void buildPOIList(Object... args) {
         JSONObject response = (JSONObject) args[0];
 
-        listPOI = new ArrayList<>();
+        listAllPoi = new ArrayList<>();
         Log.d(TAG, "call: POI LIST" + response.toString());
         try {
             JSONArray arrayPOI = (JSONArray) response.get("poi");
             for (int i = 0; i < arrayPOI.length(); i++) {
                 JSONObject poi = (JSONObject) arrayPOI.get(i);
-                listPOI.add(new POI((String) poi.get("poi"), (String) poi.get("node"), false));
+                listAllPoi.add(new POI((String) poi.get("poi"), (String) poi.get("node"), false));
             }
         } catch (JSONException e) {
             e.printStackTrace();

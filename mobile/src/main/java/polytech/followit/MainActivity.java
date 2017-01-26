@@ -15,6 +15,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -43,9 +44,12 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import polytech.followit.model.Node;
 import polytech.followit.model.POI;
 import polytech.followit.rest.SocketCallBack;
+import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.service.BroadcastResponseReceiver;
+import polytech.followit.utility.DirectionFinder;
 import polytech.followit.utility.PathSingleton;
 
 public class MainActivity extends AppCompatActivity implements
@@ -109,11 +113,6 @@ public class MainActivity extends AppCompatActivity implements
         Spinner listSpinner = (Spinner) findViewById(R.id.select_shops_spinner);
         listSpinner.setOnItemSelectedListener(this);
 
-        // Service part
-        //startService(new Intent(this, BeaconMonitoringService.class));
-        //filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
-        //LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
-
         //POURQUOI ? SINON CA AFFICHE QUAND MEME....
         ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
         pb.setVisibility(View.GONE);
@@ -155,9 +154,9 @@ public class MainActivity extends AppCompatActivity implements
         //googleApiClient.disconnect();
     }
 
-    /***********************************/
-    /**          LISTENERS            **/
-    /***********************************/
+    //==============================================================================================
+    // Listeners implementations
+    //==============================================================================================
 
     @Override
     public void onClick(View view) {
@@ -192,6 +191,27 @@ public class MainActivity extends AppCompatActivity implements
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
+        // Start service
+        startService(new Intent(this, BeaconMonitoringService.class));
+        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+
+        // Set direction for first time
+        /*for (Node node : PathSingleton.getInstance().getPath().getListNodes()) {
+            if (node.hasBeacon()) {
+                Node departure = PathSingleton.getInstance().getPath().getListNodes().get(0);
+                Node arrival = node;
+                double angle;
+                if (arrival.getxCoord() >= departure.getxCoord()) {
+                    angle = DirectionFinder.angleBetweenTwoNode(departure, arrival);
+                }
+                else {
+                    angle = -1 * DirectionFinder.angleBetweenTwoNode(departure, arrival);
+                }
+                PathSingleton.getInstance().setAngleDeviationToNextBeacon(angle);
+            }
+        }*/
+
         Intent intent = new Intent(this, NavigationActivity.class);
         intent.putExtra("location", location);
         startActivity(intent);
@@ -199,11 +219,11 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onPOIListFetched() {
-        Log.d(TAG, "NOTIF: POI LIST" + PathSingleton.getInstance().getListPOI().toString());
+        Log.d(TAG, "NOTIF: POI LIST" + PathSingleton.getInstance().getListAllPoi().toString());
 
         final ArrayList<String> POInameSpinner = new ArrayList<>();
 
-        for (POI p : PathSingleton.getInstance().getListPOI())
+        for (POI p : PathSingleton.getInstance().getListAllPoi())
             POInameSpinner.add(p.getName());
 
         this.runOnUiThread(new Runnable() {
@@ -217,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements
                 listSpinner.setAdapter(adapter);
 
                 //Generate list View from ArrayList
-                displayListView(PathSingleton.getInstance().getListPOI());
+                displayListView(PathSingleton.getInstance().getListAllPoi());
                 progressDialog.hide();
             }
         });
@@ -237,9 +257,9 @@ public class MainActivity extends AppCompatActivity implements
     public void onNothingSelected(AdapterView<?> parent) {
     }
 
-    /***********************************/
-    /**          FUNCTIONS            **/
-    /***********************************/
+    //==============================================================================================
+    // Private utils functions
+    //==============================================================================================
 
     private void getPath() {
         //NOEUD DEPART ET ARRIVEE
@@ -247,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements
         String nodeDestination = "";
 
         //Pour chaque POI cliqué par l'user, on cherche son noeud correspondant
-        for (POI p : PathSingleton.getInstance().getListPOI()) {
+        for (POI p : PathSingleton.getInstance().getListAllPoi()) {
             if (Objects.equals(p.getName(), depart)) {
                 nodeSource = p.getNode();
             } else if (Objects.equals(p.getName(), arrivee)) {
@@ -283,10 +303,9 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-
-    /***********************************/
-    /**          LIST CHECKBOX        **/
-    /***********************************/
+    //==============================================================================================
+    // List view implementation
+    //==============================================================================================
 
     private void displayListView(ArrayList<POI> POIList) {
         //create an ArrayAdaptar from the String Array
@@ -368,7 +387,21 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(TAG, "onConnectionFailed: " + connectionResult);
+    public void onConnectionFailed(@NonNull ConnectionResult result) {
+        Log.d(TAG, "onConnectionFailed: " + result);
+    }
+
+    //==============================================================================================
+    // Socket callbacks implementation
+    //==============================================================================================
+
+    @Override
+    public void onBeaconsFetched() {
+
+    }
+
+    @Override
+    public void onNodesFetched() {
+
     }
 }

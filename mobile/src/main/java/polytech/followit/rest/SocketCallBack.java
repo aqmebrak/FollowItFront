@@ -11,4 +11,6 @@ public interface SocketCallBack {
     void onPathFetched() throws JSONException;
     void onBroadcastNotification(String message);
     void onPOIListFetched();
+    void onBeaconsFetched();
+    void onNodesFetched();
 }

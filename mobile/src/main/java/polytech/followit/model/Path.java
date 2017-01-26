@@ -7,6 +7,7 @@ public class Path {
     private ArrayList<Node> listNodes = new ArrayList<>();
     private ArrayList<Instruction> listInstructions = new ArrayList<>();
     private String source = null, destination = null;
+    private ArrayList<Beacon> listBeacons = new ArrayList<>();
 
     public Path() {
     }
@@ -41,6 +42,14 @@ public class Path {
 
     public void setDestination(String destination) {
         this.destination = destination;
+    }
+
+    public ArrayList<Beacon> getListBeacons() {
+        return listBeacons;
+    }
+
+    public void setListBeacons(ArrayList<Beacon> listBeacons) {
+        this.listBeacons = listBeacons;
     }
 
     public ArrayList<String> listInstructionsToStringArray() {

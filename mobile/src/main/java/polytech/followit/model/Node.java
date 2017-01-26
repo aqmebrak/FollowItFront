@@ -15,7 +15,7 @@ public class Node implements Serializable {
     private double xCoord, yCoord;
     private Beacon beacon;
 
-    public Node(String name, ArrayList<POI> poi, Instruction instruction, double xCoord, double yCoord, @Nullable Beacon beacon) {
+    public Node(String name, ArrayList<POI> poi, @Nullable Instruction instruction, double xCoord, double yCoord, @Nullable Beacon beacon) {
         this.name = name;
         this.poi = poi;
         this.instruction = instruction;
@@ -46,6 +46,10 @@ public class Node implements Serializable {
 
     public Beacon getBeacon() {
         return beacon;
+    }
+
+    public boolean hasBeacon() {
+        return this.beacon != null;
     }
 
     @Override

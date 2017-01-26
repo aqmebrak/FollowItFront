@@ -158,8 +158,8 @@ public class NavigationActivity extends AppCompatActivity implements
 
     @Override
     protected void onPause() {
-        sensorManager.unregisterListener(this, sensorAccelerometer);
-        sensorManager.unregisterListener(this, sensorMagneticField);
+        //sensorManager.unregisterListener(this, sensorAccelerometer);
+        //sensorManager.unregisterListener(this, sensorMagneticField);
         super.onPause();
     }
 
@@ -263,7 +263,7 @@ public class NavigationActivity extends AppCompatActivity implements
                     azimuth = Math.toDegrees(Math.atan2(sumSin, sumCos)) +
                             Math.toRadians(getGeomagneticField(location).getDeclination());
                     valuesAzimuth.clear();
-                    navigation.setRotation((float) (-azimuth));
+                    navigation.setRotation((float) -(azimuth + PathSingleton.getInstance().getAngleDeviationToNextBeacon()));
 
 
                     lastAzimuth = azimuth;
@@ -292,5 +292,18 @@ public class NavigationActivity extends AppCompatActivity implements
                 (float) location.getLongitude(),
                 (float) location.getAltitude(),
                 System.currentTimeMillis());
+    }
+
+    //==============================================================================================
+    // Socket callbacks implementation
+    //==============================================================================================
+
+    @Override
+    public void onBeaconsFetched() {
+    }
+
+    @Override
+    public void onNodesFetched() {
+
     }
 }
