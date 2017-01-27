@@ -12,9 +12,9 @@ public class GridPagerRow {
 
     private final List<Fragment> columns = new ArrayList<>();
 
-    /*public GridPagerRow(Fragment... fragments) {
+    public GridPagerRow(Fragment... fragments) {
         Collections.addAll(columns, fragments);
-    }*/
+    }
 
     public GridPagerRow() {
         super();

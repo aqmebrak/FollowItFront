@@ -2,13 +2,10 @@ package polytech.followit.service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.location.Location;
-import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -29,8 +26,6 @@ import io.socket.emitter.Emitter;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
 import polytech.followit.model.Path;
-import polytech.followit.rest.SocketCallBack;
-import polytech.followit.utility.PathSingleton;
 
 public class BeaconMonitoringService extends Service implements
         BeaconManager.MonitoringListener,
@@ -38,6 +33,7 @@ public class BeaconMonitoringService extends Service implements
 
     private static final String TAG = BeaconMonitoringService.class.getName();
     public static final String BEACON_DETECTED = "beacon detected";
+    public static final String FIRST_INSTRUCTION = "first instruction";
     private BeaconManager beaconManager;
     private Region lastDetectedRegion = new Region("", null, null, null);
 

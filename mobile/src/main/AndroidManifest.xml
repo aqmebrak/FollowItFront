@@ -16,10 +16,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".MainActivity">
-        </activity>
-
-        <activity android:name=".NavigationActivity"></activity>
+        <activity android:name=".MainActivity" />
+        <activity android:name=".NavigationActivity" />
         <activity android:name=".SplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -30,6 +28,13 @@
         <service
             android:name=".service.BeaconMonitoringService"
             android:exported="false" />
+
+        <receiver android:name=".service.NotificationBroadcast">
+            <intent-filter>
+                <action android:name="polytech.followit.FIRST_INSTRUCTION">
+                </action>
+            </intent-filter>
+        </receiver>
 
     </application>
 

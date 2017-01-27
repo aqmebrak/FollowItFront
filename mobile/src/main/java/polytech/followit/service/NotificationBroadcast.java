@@ -5,30 +5,40 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
 import polytech.followit.MainActivity;
+import polytech.followit.NavigationActivity;
 import polytech.followit.R;
 
-public class BroadcastResponseReceiver extends BroadcastReceiver {
+public class NotificationBroadcast extends BroadcastReceiver {
 
-    private static final String TAG = BroadcastResponseReceiver.class.getName();
+    private static final String TAG = NotificationBroadcast.class.getName();
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Intent viewIntent = new Intent(context, MainActivity.class);
         PendingIntent viewPendingIntent = PendingIntent.getActivity(context, 0, viewIntent, 0);
-        createNotification(context,1, R.drawable.ic_play_light,"Beacon !","Vous rentrez dans la zone d'un beacon",viewPendingIntent);
+        switch (intent.getAction()) {
+            case "polytech.followit.FIRST_INSTRUCTION":
+                String instruction = intent.getExtras().getString("firstInstruction");
+                notificationBuilder(context, 1, R.drawable.ic_play_light,
+                        "Instruction", instruction, viewPendingIntent);
+                break;
+        }
     }
 
-    private void createNotification(Context context, int nId, int icon, String title, String body, PendingIntent intent) {
+    public static void notificationBuilder(Context context, int nId, int icon, String title, String body, @Nullable PendingIntent intent) {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(icon)
                 .setContentTitle(title)
                 .setContentText(body)
-                .setContentIntent(intent)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(body));
+                //.setContentIntent(intent)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
+                .setPriority(1000)
+                .setVibrate(new long[]{1000, 1000});
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         // mId allows you to update the notification later on.

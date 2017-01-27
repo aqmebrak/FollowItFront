@@ -1,9 +1,12 @@
 package polytech.followit.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Path implements Serializable {
+public class Path implements Parcelable {
 
     private ArrayList<Node> listNodes = new ArrayList<>();
     private ArrayList<Instruction> listInstructions = new ArrayList<>();
@@ -11,6 +14,11 @@ public class Path implements Serializable {
     private ArrayList<Beacon> listBeacons = new ArrayList<>();
 
     public Path() {
+    }
+
+    protected Path(Parcel in) {
+        source = in.readString();
+        destination = in.readString();
     }
 
     public ArrayList<Node> getListNodes() {
@@ -60,4 +68,31 @@ public class Path implements Serializable {
         }
         return result;
     }
+
+    //==============================================================================================
+    // Parcelable implementations
+    //==============================================================================================
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(source);
+        parcel.writeString(destination);
+    }
+
+    public static final Creator<Path> CREATOR = new Creator<Path>() {
+        @Override
+        public Path createFromParcel(Parcel in) {
+            return new Path(in);
+        }
+
+        @Override
+        public Path[] newArray(int size) {
+            return new Path[size];
+        }
+    };
 }

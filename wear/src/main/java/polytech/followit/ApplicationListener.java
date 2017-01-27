@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.wearable.view.GridViewPager;
 import android.util.Log;
+import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -70,9 +72,14 @@ public class ApplicationListener extends Application implements
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                     instructions = dataMap.getStringArrayList("instructions");
 
-                    Intent main = new Intent(this, MainActivity.class);
-                    main.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(main);
+                    /*if (instructions != null) {
+                        text.setVisibility(View.INVISIBLE);
+                        GridViewPager pager = (GridViewPager) findViewById(R.id.grid_view_pager);
+                        pager.setAdapter(new GridPagerAdapter(this,getFragmentManager()));
+                    }*/
+                    //Intent main = new Intent(this, MainActivity.class);
+                    //main.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    //startActivity(main);
 
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {

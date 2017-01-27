@@ -1,6 +1,7 @@
 package polytech.followit;
 
 
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,10 +12,11 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -28,7 +30,6 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 
-import com.estimote.sdk.SystemRequirementsChecker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -40,18 +41,13 @@ import com.google.android.gms.wearable.Wearable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import polytech.followit.model.Node;
 import polytech.followit.model.POI;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
-import polytech.followit.service.BroadcastResponseReceiver;
-import polytech.followit.utility.DirectionFinder;
+import polytech.followit.service.NotificationBroadcast;
 import polytech.followit.utility.PathSingleton;
 
 public class MainActivity extends AppCompatActivity implements
@@ -63,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements
         LocationListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    public static final String FIRST_INSTRUCTION = "first instruction";
 
     private GoogleApiClient googleApiClient;
     private PutDataMapRequest mapRequest;
@@ -73,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements
 
     // Service variables
     private IntentFilter filter;
-    private BroadcastReceiver broadcastReceiver = new BroadcastResponseReceiver();
+    private BroadcastReceiver broadcastReceiver = new NotificationBroadcast();
 
     //POI DE DEPART ET DESTINATION
     public String depart;
@@ -189,7 +186,10 @@ public class MainActivity extends AppCompatActivity implements
     public void onPathFetched() throws JSONException {
         Log.d(TAG, "ONPATHFETCHED");
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/startActivity");
-        putDataMapReq.getDataMap().putStringArrayList("instructions", PathSingleton.getInstance().getPath().listInstructionsToStringArray());
+        ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();
+        String timestamp = Long.toString(System.currentTimeMillis());
+        putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
+        putDataMapReq.getDataMap().putString("timestamp", timestamp);
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
@@ -199,6 +199,8 @@ public class MainActivity extends AppCompatActivity implements
         startService(serviceIntent);
         filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
+
+        sendNotification("polytech.followit.FIRST_INSTRUCTION");
 
         // Set direction for first time
         /*for (Node node : PathSingleton.getInstance().getPath().getListNodes()) {
@@ -393,5 +395,17 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult result) {
         Log.d(TAG, "onConnectionFailed: " + result);
+    }
+
+    //==============================================================================================
+    // Utils implementation
+    //==============================================================================================
+
+    public void sendNotification(String action) {
+        Intent in = new Intent();
+        in.setAction("polytech.followit.FIRST_INSTRUCTION");
+        if (PathSingleton.getInstance().getPath().getListInstructions().get(1) != null)
+            in.putExtra("firstInstruction", PathSingleton.getInstance().getPath().getListInstructions().get(1).getInstruction());
+        sendBroadcast(in);
     }
 }

@@ -5,26 +5,29 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.support.wearable.view.CardFragment;
 import android.support.wearable.view.FragmentGridPagerAdapter;
+import android.util.Log;
 
 import java.util.ArrayList;
 
 public class GridPagerAdapter extends FragmentGridPagerAdapter {
 
+    private final String TAG = GridPagerAdapter.class.getSimpleName();
     private final Context context;
-
     private final ArrayList<GridPagerRow> rowList = new ArrayList<>();
 
     public GridPagerAdapter(Context context, FragmentManager fragmentManager) {
         super(fragmentManager);
+        Log.d(TAG, "ON GRID PAGER ADAPTER CONSTRUCTOR");
         this.context = context;
+        GridPagerRow pagerRow = new GridPagerRow();
 
         if (ApplicationListener.instructions != null) {
-            GridPagerRow pagerRow = new GridPagerRow();
-            for (int i=1; i<ApplicationListener.instructions.size() -1; i++) {
+            for (int i = 1; i < ApplicationListener.instructions.size() - 1; i++) {
                 pagerRow.addColumn(CardFragment.create("Instruction", ApplicationListener.instructions.get(i)));
             }
             rowList.add(pagerRow);
         }
+        else rowList.add(new GridPagerRow(CardFragment.create("Oups !","Veuillez définir votre destination")));
 
         /*rowList.add(new GridPagerRow(CardFragment.create("titre 1","contenu 1"),
                 CardFragment.create("HAHA","YOLO")));

@@ -74,9 +74,9 @@ public class NavigationActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.navigation_activity);
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        //sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        //sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        //sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         valuesAccelerometer = new float[3];
         valuesMagneticField = new float[3];
@@ -150,8 +150,8 @@ public class NavigationActivity extends AppCompatActivity implements
 
     @Override
     protected void onResume() {
-        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        sensorManager.registerListener(this, sensorMagneticField, SensorManager.SENSOR_DELAY_UI);
+        //sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_UI);
+        //sensorManager.registerListener(this, sensorMagneticField, SensorManager.SENSOR_DELAY_UI);
 
         super.onResume();
     }
