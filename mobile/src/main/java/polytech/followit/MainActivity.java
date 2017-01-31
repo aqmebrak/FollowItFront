@@ -8,19 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -33,6 +28,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 
+import com.estimote.sdk.SystemRequirementsChecker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -50,6 +46,7 @@ import java.util.Objects;
 import polytech.followit.model.POI;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
+import polytech.followit.service.MessageHandler;
 import polytech.followit.service.NotificationBroadcast;
 import polytech.followit.utility.PathSingleton;
 
@@ -59,22 +56,11 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener,
         AdapterView.OnItemSelectedListener,
-        LocationListener,
         ServiceConnection {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    public static final String FIRST_INSTRUCTION = "first instruction";
 
     private GoogleApiClient googleApiClient;
-    private PutDataMapRequest mapRequest;
-    private PutDataRequest request;
-
-    private LocationManager locationManager;
-    private Location location;
-
-    // Service variables
-    private IntentFilter filter;
-    private BroadcastReceiver broadcastReceiver = new NotificationBroadcast();
 
     //POI DE DEPART ET DESTINATION
     public String depart;
@@ -86,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements
     // Messenger
     private Messenger messenger = null;
     private boolean isServiceBounded;
-    private BeaconMonitoringService beaconMonitoringService;
 
 
     //==============================================================================================
@@ -97,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SystemRequirementsChecker.checkWithDefaultDialogs(this);
 
         // hide progressbar so it doesn't appear at first
         findViewById(R.id.pb).setVisibility(View.GONE);
@@ -133,6 +120,8 @@ public class MainActivity extends AppCompatActivity implements
         progressDialog.setCancelable(true);
         progressDialog.show();
 
+        // Create and bind the service
+        bindService(new Intent(this, BeaconMonitoringService.class), this, Context.BIND_AUTO_CREATE);
     }
 
 
@@ -145,32 +134,23 @@ public class MainActivity extends AppCompatActivity implements
         Button getPathButton = (Button) findViewById(R.id.getPathButton);
         getPathButton.setVisibility(View.VISIBLE);
 
-        //truc
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED
-                || ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-            String[] permissions = new String[]{android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.ACCESS_FINE_LOCATION};
-            ActivityCompat.requestPermissions(this, permissions, PackageManager.PERMISSION_GRANTED);
-        }
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        //SystemRequirementsChecker.checkWithDefaultDialogs(this);
+        SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        //googleApiClient.disconnect();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        bindService(new Intent(this, BeaconMonitoringService.class), this, Context.BIND_AUTO_CREATE);
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG,"On destroy");
         if (isServiceBounded) {
             unbindService(this);
             isServiceBounded = false;
@@ -191,58 +171,22 @@ public class MainActivity extends AppCompatActivity implements
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.VISIBLE);
 
-                if (isServiceBounded) {
-                    // Create and send a message to the service, using a supported 'what' value
-                    Message msg = Message.obtain(null, BeaconMonitoringService.MSG_TEST, 0, 0);
-                    try {
-                        messenger.send(msg);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-                //onPathClicked();
+                onPathClicked();
         }
     }
 
+    /**
+     * Fired when we received the path
+     * @throws JSONException
+     */
     @Override
     public void onPathFetched() throws JSONException {
         Log.d(TAG, "ONPATHFETCHED");
-        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/startActivity");
-        ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();
-        String timestamp = Long.toString(System.currentTimeMillis());
-        putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
-        putDataMapReq.getDataMap().putString("timestamp", timestamp);
-        PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-        PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
 
-        // Start service TODO: Change with parcelable ++fast
-        Intent serviceIntent = new Intent(this, BeaconMonitoringService.class);
-        serviceIntent.putExtra("path", PathSingleton.getInstance().getPath());
-        startService(serviceIntent);
-        filter = new IntentFilter(BeaconMonitoringService.BEACON_DETECTED);
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, filter);
-
-        sendNotification("polytech.followit.FIRST_INSTRUCTION");
-
-        // Set direction for first time
-        /*for (Node node : PathSingleton.getInstance().getPath().getListNodes()) {
-            if (node.hasBeacon()) {
-                Node departure = PathSingleton.getInstance().getPath().getListNodes().get(0);
-                Node arrival = node;
-                double angle;
-                if (arrival.getxCoord() >= departure.getxCoord()) {
-                    angle = DirectionFinder.angleBetweenTwoNode(departure, arrival);
-                }
-                else {
-                    angle = -1 * DirectionFinder.angleBetweenTwoNode(departure, arrival);
-                }
-                PathSingleton.getInstance().setAngleDeviationToNextBeacon(angle);
-            }
-        }*/
-
-        Intent intent = new Intent(this, NavigationActivity.class);
-        intent.putExtra("location", location);
-        startActivity(intent);
+        syncDataWithService();
+        syncDataWithWatch();
+        sendNotification("FIRST_INSTRUCTION");
+        startActivity(new Intent(this, NavigationActivity.class));
     }
 
     @Override
@@ -331,6 +275,30 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private void sendNotification(String action) {
+        Intent in = new Intent();
+        in.setAction("polytech.followit.FIRST_INSTRUCTION");
+        if (PathSingleton.getInstance().getPath().getListInstructions().get(1) != null)
+            in.putExtra("firstInstruction", PathSingleton.getInstance().getPath().getListInstructions().get(1).getInstruction());
+        sendBroadcast(in);
+    }
+
+    private void syncDataWithWatch() {
+        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
+        ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();
+        String timestamp = Long.toString(System.currentTimeMillis());
+        putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
+        putDataMapReq.getDataMap().putString("timestamp", timestamp);
+        PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
+        Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
+    }
+
+    private void  syncDataWithService() {
+        Intent serviceIntent = new Intent(this,BeaconMonitoringService.class);
+        serviceIntent.putExtra("path", PathSingleton.getInstance().getPath());
+        startService(serviceIntent);
+    }
+
     //==============================================================================================
     // List view implementation
     //==============================================================================================
@@ -379,28 +347,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     //==============================================================================================
-    // Location implementation
-    //==============================================================================================
-
-    @Override
-    public void onLocationChanged(Location location) {
-        this.location = location;
-    }
-
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-    }
-
-    //==============================================================================================
     // GoogleApiClient service implementation
     //==============================================================================================
 
@@ -420,18 +366,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     //==============================================================================================
-    // Utils implementation
-    //==============================================================================================
-
-    public void sendNotification(String action) {
-        Intent in = new Intent();
-        in.setAction("polytech.followit.FIRST_INSTRUCTION");
-        if (PathSingleton.getInstance().getPath().getListInstructions().get(1) != null)
-            in.putExtra("firstInstruction", PathSingleton.getInstance().getPath().getListInstructions().get(1).getInstruction());
-        sendBroadcast(in);
-    }
-
-    //==============================================================================================
     // Service Messaging implementation
     //==============================================================================================
 
@@ -442,6 +376,7 @@ public class MainActivity extends AppCompatActivity implements
     // representation of that from the raw IBinder object.
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        Log.d(TAG, "Service connected, ready to be bind");
         messenger = new Messenger(iBinder);
         isServiceBounded = true;
     }
@@ -450,6 +385,7 @@ public class MainActivity extends AppCompatActivity implements
     // unexpectedly disconnected -- that is, its process crashed.
     @Override
     public void onServiceDisconnected(ComponentName className) {
+        Log.e(TAG, "Service disconnected");
         messenger = null;
         isServiceBounded = false;
     }

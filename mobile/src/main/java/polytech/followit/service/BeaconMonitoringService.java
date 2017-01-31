@@ -2,11 +2,11 @@ package polytech.followit.service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Handler;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.support.annotation.Nullable;
+import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -36,28 +36,27 @@ public class BeaconMonitoringService extends Service implements
         BeaconManager.ServiceReadyCallback {
 
     private static final String TAG = BeaconMonitoringService.class.getName();
-    public static final String BEACON_DETECTED = "beacon detected";
-    public static final String FIRST_INSTRUCTION = "first instruction";
-    public static final int MSG_TEST = 1;
+    private Messenger messenger;
 
     private BeaconManager beaconManager;
-    private Region lastDetectedRegion = new Region("", null, null, null);
 
     private Socket socket;
-    private ArrayList<polytech.followit.model.Beacon> listAllBeacons;
-    private ArrayList<Node> listAllNodes;
-    private Path path;
+    public static Path path;
+    private boolean isStarted = false;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG,"ON CREATE SERVICE");
+        Log.d(TAG, "ON CREATE SERVICE");
         beaconManager = new BeaconManager(getApplicationContext());
         beaconManager.setBackgroundScanPeriod(1000, 5000);
         beaconManager.setRegionExitExpiration(5000);
 
         beaconManager.connect(this);
         beaconManager.setMonitoringListener(this);
+
+        messenger = new Messenger(new MessageHandler());
 
         try {
             socket = IO.socket("https://followit-backend.herokuapp.com/");
@@ -70,16 +69,11 @@ public class BeaconMonitoringService extends Service implements
             public void call(Object... args) {
             }
 
-        }).on("beaconArray", new Emitter.Listener() {
+        }).on("beaconList", new Emitter.Listener() {
 
             @Override
             public void call(Object... args) {
                 buildAllBeacons(args);
-            }
-        }).on("allNodes", new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                buildAllNodes(args);
             }
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
 
@@ -91,15 +85,30 @@ public class BeaconMonitoringService extends Service implements
         socket.connect();
     }
 
+    /**
+     * Called when we use start(@Intent service)
+     */
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
-        path = (Path) intent.getExtras().get("path");
+        Log.d(TAG, "on start command");
+        if (!isStarted) {
+            socket.emit("getAllBeacons");
+            isStarted = true;
+        }
+        path = intent.getExtras().getParcelable("path");
         return START_STICKY;
     }
 
+    /**
+     * We enter a region we're monitoring
+     * @param region Region we just entered
+     * @param list List of beacon detected
+     */
     @Override
     public void onEnteredRegion(Region region, List<Beacon> list) {
-        Log.d(TAG, "ON ENTERED REGION");
+        Log.d(TAG, "ON ENTERED REGION"+path.toString());
+
+        // We need to convert all @Estimote.Beacon objects to our @Followit.Beacon objects
         ArrayList<polytech.followit.model.Beacon> listDetectedBeacon = new ArrayList<>();
         for (Beacon beacon : list) {
             listDetectedBeacon.add(new polytech.followit.model.Beacon(
@@ -111,22 +120,29 @@ public class BeaconMonitoringService extends Service implements
         }
 
         for (polytech.followit.model.Beacon beacon : listDetectedBeacon) {
-            // beacon non prévu dans le chemin
-            /*if (!PathSingleton.getInstance().getPath().getListBeacons().contains(beacon)) {
-                JSONObject o = new JSONObject();
+            // Beacon not in our path
+            if (!path.isBeaconInside(beacon)) {
+                Log.d(TAG, "detected beacon :" + beacon + " not in our path. Source node : "+path.getSource());
                 try {
-                    o.put("source", getNodeNameFromBeacon(beacon));
-                    o.put("destination", PathSingleton.getInstance().getPath().getDestination());
-                } catch (JSONException e) {
+                    Bundle msg_data = new Bundle();
+                    msg_data.putString("source", path.getSource());
+                    msg_data.putString("destination", path.getDestination());
+                    Message msg = Message.obtain(null, MessageHandler.MSG_ASK_NEW_PATH);
+                    msg.setData(msg_data);
+                    messenger.send(msg);
+                } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-                PathSingleton.getInstance().askForPath(o);
-            } else*/ if (!lastDetectedRegion.equals(region)) {
-                Log.d(TAG, "BEACON DETECTED");
-                Intent in = new Intent(BEACON_DETECTED);
-                in.putExtra("region", region);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(in);
-                lastDetectedRegion = region;
+            }
+            // Beacon detected in our path
+            else {
+                Log.d(TAG,"We detected a beacon in our path");
+                try {
+                    Message msg = Message.obtain(null, MessageHandler.MSG_NEXT_INSTRUCTION);
+                    messenger.send(msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -138,69 +154,37 @@ public class BeaconMonitoringService extends Service implements
 
     @Override
     public void onServiceReady() {
-        socket.emit("getAllNodes");
-        socket.emit("getBeaconArray");
+        Log.d(TAG, "on service Ready");
     }
 
-    private String getNodeNameFromBeacon(polytech.followit.model.Beacon beacon) {
-        for (Node node : listAllNodes) {
-            if (node.getBeacon().equals(beacon))
-                return node.getName();
-        }
-        //// TODO: 26/01/2017 handle exception
-        return null;
+    /**
+     * When binding to the service, we return the binder so we can send messages
+     */
+    @Override
+    public IBinder onBind(Intent intent) {
+        Toast.makeText(getApplicationContext(), "binding", Toast.LENGTH_SHORT).show();
+        return messenger.getBinder();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG,"Service stopped and destroyed");
+        super.onDestroy();
     }
 
     //==============================================================================================
     // Utils
     //==============================================================================================
 
-    private void buildAllNodes(Object... args) {
-        JSONObject response = (JSONObject) args[0];
-        listAllNodes = new ArrayList<>();
-        Log.d(TAG,"RESPONSE GET ALL NODES" + response);
-        try {
-            JSONArray nodesArray = response.getJSONArray("nodes");
-            for (int i = 0; i < nodesArray.length(); i++) {
-                JSONObject node = nodesArray.getJSONObject(i);
-                JSONObject node_value = node.getJSONObject("value");
-
-                String name = node.getString("v");
-
-                JSONArray poi = node_value.getJSONArray("POI");
-                ArrayList<POI> listPoi = new ArrayList<>();
-                for (int j = 0; j < poi.length(); j++) {
-                    POI node_poi = new POI(poi.getString(j),null,false);
-                    listPoi.add(node_poi);
-                }
-
-                JSONObject node_value_coord = (JSONObject) node_value.get("coord");
-                double xCoord = node_value_coord.getDouble("x");
-                double yCoord = node_value_coord.getDouble("y");
-
-                polytech.followit.model.Beacon beacon = null;
-                if (node_value.has("beacon")) {
-                    JSONObject node_value_beacon = node_value.getJSONObject("beacon");
-                    beacon = new polytech.followit.model.Beacon(
-                            node_value_beacon.getString("name"),
-                            node_value_beacon.getString("UUID"),
-                            node_value_beacon.getInt("major"),
-                            node_value_beacon.getInt("minor")
-                    );
-                }
-
-                Node newNode = new Node(name, listPoi, null, xCoord, yCoord, beacon);
-                listAllNodes.add(newNode);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * Build a list of all beacons fetched by the socket a
+     * and monitor regions based on the beacons fetched
+     * @param args response from socket
+     */
     private void buildAllBeacons(Object... args) {
         JSONObject response = (JSONObject) args[0];
-        listAllBeacons = new ArrayList<>();
-        Log.d(TAG,"RESPONSE GETBEACONARRAY : "+response);
+        ArrayList<polytech.followit.model.Beacon> listAllBeacons = new ArrayList<>();
+        Log.d(TAG, "RESPONSE GETBEACONARRAY : " + response);
         try {
             JSONArray beaconsArray = response.getJSONArray("beaconArray");
             for (int i = 0; i < beaconsArray.length(); i++) {
@@ -211,7 +195,7 @@ public class BeaconMonitoringService extends Service implements
                 int minor = beacon.getInt("minor");
                 listAllBeacons.add(new polytech.followit.model.Beacon(name, UUID, major, minor));
             }
-            Log.d(TAG,"LIST ALL BEACONS : "+listAllBeacons.toString());
+            Log.d(TAG, "LIST ALL BEACONS : " + listAllBeacons.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -225,40 +209,5 @@ public class BeaconMonitoringService extends Service implements
             );
             beaconManager.startMonitoring(region);
         }
-    }
-
-    //==============================================================================================
-    // Messaging implementation
-    //==============================================================================================
-
-    /**
-     * Handler of incoming messages from clients.
-     */
-    class IncomingHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_TEST:
-                    Toast.makeText(getApplicationContext(), "hello!", Toast.LENGTH_SHORT).show();
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    }
-
-    /**
-     * Target we publish for clients to send messages to IncomingHandler.
-     */
-    final Messenger mMessenger = new Messenger(new IncomingHandler());
-
-    /**
-     * When binding to the service, we return an interface to our messenger
-     * for sending messages to the service.
-     */
-    @Override
-    public IBinder onBind(Intent intent) {
-        Toast.makeText(getApplicationContext(), "binding", Toast.LENGTH_SHORT).show();
-        return mMessenger.getBinder();
     }
 }

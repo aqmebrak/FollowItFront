@@ -118,14 +118,6 @@ public class PathSingleton {
         this.listAllPoi = listAllPoi;
     }
 
-    public double getAngleDeviationToNextBeacon() {
-        return angleDeviationToNextBeacon;
-    }
-
-    public void setAngleDeviationToNextBeacon(double angleDeviationToNextBeacon) {
-        this.angleDeviationToNextBeacon = angleDeviationToNextBeacon;
-    }
-
     //==============================================================================================
     // socket functions
     //==============================================================================================

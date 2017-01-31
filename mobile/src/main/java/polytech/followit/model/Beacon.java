@@ -1,8 +1,9 @@
 package polytech.followit.model;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
 
-public class Beacon implements Serializable{
+public class Beacon implements Parcelable {
 
     private String name, UUID;
     private int major, minor;
@@ -12,6 +13,13 @@ public class Beacon implements Serializable{
         this.UUID = UUID;
         this.major = major;
         this.minor = minor;
+    }
+
+    protected Beacon(Parcel in) {
+        name = in.readString();
+        UUID = in.readString();
+        major = in.readInt();
+        minor = in.readInt();
     }
 
     public String getName() {
@@ -38,5 +46,55 @@ public class Beacon implements Serializable{
                 ", major=" + major +
                 ", minor=" + minor +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Beacon beacon = (Beacon) o;
+
+        if (major != beacon.major) return false;
+        if (minor != beacon.minor) return false;
+        return UUID != null ? UUID.equals(beacon.UUID) : beacon.UUID == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = UUID != null ? UUID.hashCode() : 0;
+        result = 31 * result + major;
+        result = 31 * result + minor;
+        return result;
+    }
+
+    //==============================================================================================
+    // Parcelable implementation
+    //==============================================================================================
+
+    public static final Creator<Beacon> CREATOR = new Creator<Beacon>() {
+        @Override
+        public Beacon createFromParcel(Parcel in) {
+            return new Beacon(in);
+        }
+
+        @Override
+        public Beacon[] newArray(int size) {
+            return new Beacon[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(UUID);
+        dest.writeInt(major);
+        dest.writeInt(minor);
     }
 }

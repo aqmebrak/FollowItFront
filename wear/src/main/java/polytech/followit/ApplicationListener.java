@@ -68,19 +68,9 @@ public class ApplicationListener extends Application implements
                 // DataItem changed
                 Log.d(TAG,"data item : "+event.getDataItem());
                 DataItem item = event.getDataItem();
-                if (item.getUri().getPath().compareTo("/startActivity") == 0) {
+                if (item.getUri().getPath().equals("/instructions")) {
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                     instructions = dataMap.getStringArrayList("instructions");
-
-                    /*if (instructions != null) {
-                        text.setVisibility(View.INVISIBLE);
-                        GridViewPager pager = (GridViewPager) findViewById(R.id.grid_view_pager);
-                        pager.setAdapter(new GridPagerAdapter(this,getFragmentManager()));
-                    }*/
-                    //Intent main = new Intent(this, MainActivity.class);
-                    //main.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    //startActivity(main);
-
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
                 // DataItem deleted

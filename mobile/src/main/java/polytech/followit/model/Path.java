@@ -16,9 +16,11 @@ public class Path implements Parcelable {
     public Path() {
     }
 
+
     protected Path(Parcel in) {
         source = in.readString();
         destination = in.readString();
+        listBeacons = in.createTypedArrayList(Beacon.CREATOR);
     }
 
     public ArrayList<Node> getListNodes() {
@@ -69,20 +71,27 @@ public class Path implements Parcelable {
         return result;
     }
 
+    public boolean isBeaconInside(Beacon beacon) {
+        for (Beacon b: listBeacons) {
+            if (b.equals(beacon)) return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Path{" +
+                "listNodes=" + listNodes +
+                ", listInstructions=" + listInstructions +
+                ", source='" + source + '\'' +
+                ", destination='" + destination + '\'' +
+                ", listBeacons=" + listBeacons +
+                '}';
+    }
+
     //==============================================================================================
     // Parcelable implementations
     //==============================================================================================
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(source);
-        parcel.writeString(destination);
-    }
 
     public static final Creator<Path> CREATOR = new Creator<Path>() {
         @Override
@@ -95,4 +104,17 @@ public class Path implements Parcelable {
             return new Path[size];
         }
     };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(source);
+        dest.writeString(destination);
+        dest.writeTypedList(listBeacons);
+    }
+
 }

@@ -22,7 +22,7 @@ public class NotificationBroadcast extends BroadcastReceiver {
         Intent viewIntent = new Intent(context, MainActivity.class);
         PendingIntent viewPendingIntent = PendingIntent.getActivity(context, 0, viewIntent, 0);
         switch (intent.getAction()) {
-            case "polytech.followit.FIRST_INSTRUCTION":
+            case "FIRST_INSTRUCTION":
                 String instruction = intent.getExtras().getString("firstInstruction");
                 notificationBuilder(context, 1, R.drawable.ic_play_light,
                         "Instruction", instruction, viewPendingIntent);

@@ -1,22 +1,18 @@
 package polytech.followit;
 
 import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Context;
-import android.hardware.GeomagneticField;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.location.Location;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,35 +23,14 @@ import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
 import polytech.followit.rest.SocketCallBack;
+import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.utility.PathSingleton;
 
 public class NavigationActivity extends AppCompatActivity implements
-        SensorEventListener,
         View.OnClickListener,
         SocketCallBack {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
-
-    /**
-     * variables for sensor
-     **/
-    private SensorManager sensorManager;
-    private Sensor sensorAccelerometer;
-    private Sensor sensorMagneticField;
-
-    private float[] valuesAccelerometer;
-    private float[] valuesMagneticField;
-    private float[] matrixR;
-    private float[] matrixI;
-    private float[] matrixValues;
-
-    private ImageView navigation;
-    private final int NUMBER_OF_MEASUREMENT = 5;
-    private final double MIN_DIFF_FOR_EVENT = 5;
-    private ArrayList<Double> valuesAzimuth;
-    private double lastAzimuth;
-
-    private Location location;
 
     //recupere la liste en RAW de la navigation
     ArrayList<Node> listNavigation = null;
@@ -69,33 +44,17 @@ public class NavigationActivity extends AppCompatActivity implements
     //Instruction en cours
     Instruction ongoingInstruction;
 
+    //==============================================================================================
+    // Lifecycle
+    //==============================================================================================
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "ON create - Navigation Activity");
         setContentView(R.layout.navigation_activity);
 
-        //sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        //sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        //sensorMagneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
-        valuesAccelerometer = new float[3];
-        valuesMagneticField = new float[3];
-        matrixR = new float[9];
-        matrixI = new float[9];
-        matrixValues = new float[3];
-
-        valuesAzimuth = new ArrayList<>();
-        lastAzimuth = 360;
-
-        navigation = (ImageView) findViewById(R.id.navigation);
-        navigation.setImageResource(R.drawable.ic_navigation_black_24dp);
-
         PathSingleton.getInstance().setSocketCallBack(this);
-
-        //RECUPERE LES DONNES
-        Bundle bundle = getIntent().getExtras();
-        location = (Location) bundle.getParcelable("location");
-
         prepareNavigationList();
 
         //button listeners
@@ -105,6 +64,92 @@ public class NavigationActivity extends AppCompatActivity implements
         b.setOnClickListener(this);
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    //==============================================================================================
+    // Listeners implementation
+    //==============================================================================================
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.previous_button:
+                if (index > 0) {
+                    index--;
+                    TextView t = (TextView) findViewById(R.id.instructions_textView);
+                    t.setText(navigationSteps.get(index).instruction);
+                    ongoingInstruction = navigationSteps.get(index);
+                }
+                break;
+            case R.id.next_button:
+                if (index < navigationSteps.size() - 1) {
+                    index++;
+                    TextView t = (TextView) findViewById(R.id.instructions_textView);
+                    t.setText(navigationSteps.get(index).instruction);
+                    ongoingInstruction = navigationSteps.get(index);
+                }
+                break;
+        }
+    }
+
+
+    @Override
+    public void onPathFetched() throws JSONException {
+        Log.d(TAG, "ON PATH FETCHED NavigationActivity");
+
+        syncDataWithService();
+        prepareNavigationList();
+    }
+
+
+    @Override
+    public void onBroadcastNotification(String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(NavigationActivity.this)
+                        .setSmallIcon(R.drawable.ic_stat_name)
+                        .setContentTitle("Mise `a jour de la carte")
+                        .setContentText("La carte a ete mise a jour, nous avons synchronise votre chemin");
+                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                // notificationID allows you to update the notification later on.
+                mNotificationManager.notify(1, mBuilder.build());
+
+                //TODO: ADD action on notification click
+                //ON redemande le chemin
+                //on cherche l'étape active
+                Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
+
+                Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
+                JSONObject o = new JSONObject();
+                try {
+                    o.put("source", ongoingInstruction.nodeToGoTo);
+                    o.put("destination", PathSingleton.getInstance().getPath().getDestination());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                PathSingleton.getInstance().askForPath(o);
+            }
+        });
+    }
+
+    @Override
+    public void onPOIListFetched() {
+    }
+
+    //==============================================================================================
+    // List view implementation
+    //==============================================================================================
 
     private void prepareNavigationList() {
         //ON PREPARE LA LISTE DES ETAPES
@@ -148,150 +193,13 @@ public class NavigationActivity extends AppCompatActivity implements
         });
     }
 
-    @Override
-    protected void onResume() {
-        //sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_UI);
-        //sensorManager.registerListener(this, sensorMagneticField, SensorManager.SENSOR_DELAY_UI);
-
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        //sensorManager.unregisterListener(this, sensorAccelerometer);
-        //sensorManager.unregisterListener(this, sensorMagneticField);
-        super.onPause();
-    }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.previous_button:
-                if (index > 0) {
-                    index--;
-                    TextView t = (TextView) findViewById(R.id.instructions_textView);
-                    t.setText(navigationSteps.get(index).instruction);
-                    ongoingInstruction = navigationSteps.get(index);
-                }
-                break;
-            case R.id.next_button:
-                if (index < navigationSteps.size() - 1) {
-                    index++;
-                    TextView t = (TextView) findViewById(R.id.instructions_textView);
-                    t.setText(navigationSteps.get(index).instruction);
-                    ongoingInstruction = navigationSteps.get(index);
-                }
-                break;
-        }
-    }
-
-    @Override
-    public void onPathFetched() throws JSONException {
-        //NOT USED
-        Log.d(TAG, "ON PATH FETCHED");
-        prepareNavigationList();
-    }
-
-    @Override
-    public void onBroadcastNotification(String message) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(NavigationActivity.this)
-                        .setSmallIcon(R.drawable.ic_stat_name)
-                        .setContentTitle("Mise `a jour de la carte")
-                        .setContentText("La carte a ete mise a jour, nous avons synchronise votre chemin");
-                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                // notificationID allows you to update the notification later on.
-                mNotificationManager.notify(1, mBuilder.build());
-
-                //TODO: ADD action on notification click
-                //ON redemande le chemin
-                //on cherche l'étape active
-                Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
-
-                Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
-                JSONObject o = new JSONObject();
-                try {
-                    o.put("source", ongoingInstruction.nodeToGoTo);
-                    o.put("destination", PathSingleton.getInstance().getPath().getDestination());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                PathSingleton.getInstance().askForPath(o);
-            }
-        });
-    }
-
-    @Override
-    public void onPOIListFetched() {
-        //NOT USED
-    }
-
     //==============================================================================================
-    // Sensors implementation
+    // Utils
     //==============================================================================================
 
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-
-        switch (event.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
-                System.arraycopy(event.values, 0, valuesAccelerometer, 0, 3);
-                break;
-            case Sensor.TYPE_MAGNETIC_FIELD:
-                System.arraycopy(event.values, 0, valuesMagneticField, 0, 3);
-                break;
-        }
-
-        boolean success = SensorManager.getRotationMatrix(matrixR, matrixI, valuesAccelerometer, valuesMagneticField);
-
-        if (success) {
-            SensorManager.getOrientation(matrixR, matrixValues);
-            double azimuth = matrixValues[0];
-
-            if (Math.abs(lastAzimuth - Math.toDegrees(azimuth)) > MIN_DIFF_FOR_EVENT) {
-
-                if (valuesAzimuth.size() == NUMBER_OF_MEASUREMENT) {
-                    double sumSin = 0;
-                    double sumCos = 0;
-                    for (double value : valuesAzimuth) {
-                        sumSin += Math.sin(value);
-                        sumCos += Math.cos(value);
-                    }
-                    azimuth = Math.toDegrees(Math.atan2(sumSin, sumCos)) +
-                            Math.toRadians(getGeomagneticField(location).getDeclination());
-                    valuesAzimuth.clear();
-                    navigation.setRotation((float) -(azimuth + PathSingleton.getInstance().getAngleDeviationToNextBeacon()));
-
-
-                    lastAzimuth = azimuth;
-
-                    /*PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/startActivity");
-                    putDataMapReq.getDataMap().putStringArrayList("instructions", azimuth);
-                    PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-                    PendingResult<DataApi.DataItemResult> pendingResult = Wearable.DataApi.putDataItem(googleApiClient, putDataReq);*/
-                } else valuesAzimuth.add(azimuth);
-            }
-        }
+    private void  syncDataWithService() {
+        Intent serviceIntent = new Intent(this,BeaconMonitoringService.class);
+        serviceIntent.putExtra("path", PathSingleton.getInstance().getPath());
+        startService(serviceIntent);
     }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-    }
-
-    //==============================================================================================
-    // Functions utils
-    //==============================================================================================
-
-    private GeomagneticField getGeomagneticField(Location location) {
-        return new GeomagneticField(
-                (float) location.getLatitude(),
-                (float) location.getLongitude(),
-                (float) location.getAltitude(),
-                System.currentTimeMillis());
-    }
-
 }

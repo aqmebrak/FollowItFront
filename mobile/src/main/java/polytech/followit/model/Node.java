@@ -2,10 +2,9 @@ package polytech.followit.model;
 
 import android.support.annotation.Nullable;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Node implements Serializable {
+public class Node {
 
     private static final long serialVersionUID = 1L;
 

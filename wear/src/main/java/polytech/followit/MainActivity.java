@@ -7,8 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 public class MainActivity extends Activity {
 
     private final String TAG = MainActivity.class.getSimpleName();
@@ -19,6 +17,9 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         Log.d(TAG, "ON CREATE");
+
+        GridViewPager pager = (GridViewPager) findViewById(R.id.grid_view_pager);
+        pager.setAdapter(new GridPagerAdapter(this, getFragmentManager()));
     }
 
     @Override
@@ -26,7 +27,5 @@ public class MainActivity extends Activity {
         super.onResume();
 
         Log.d(TAG,"ON RESUME");
-        GridViewPager pager = (GridViewPager) findViewById(R.id.grid_view_pager);
-        pager.setAdapter(new GridPagerAdapter(this, getFragmentManager()));
     }
 }

@@ -2,9 +2,7 @@ package polytech.followit.model;
 
 import android.support.annotation.Nullable;
 
-import java.io.Serializable;
-
-public class Instruction implements Serializable {
+public class Instruction {
 
     public String nodeToGoTo;
     public String nodeFrom;
