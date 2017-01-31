@@ -1,22 +1,25 @@
 package polytech.followit;
 
 
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -56,7 +59,8 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener,
         AdapterView.OnItemSelectedListener,
-        LocationListener {
+        LocationListener,
+        ServiceConnection {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     public static final String FIRST_INSTRUCTION = "first instruction";
@@ -78,6 +82,12 @@ public class MainActivity extends AppCompatActivity implements
     ProgressDialog progressDialog;
 
     MyCustomAdapter dataAdapter = null;
+
+    // Messenger
+    private Messenger messenger = null;
+    private boolean isServiceBounded;
+    private BeaconMonitoringService beaconMonitoringService;
+
 
     //==============================================================================================
     // Lifecycle
@@ -152,6 +162,21 @@ public class MainActivity extends AppCompatActivity implements
         //googleApiClient.disconnect();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        bindService(new Intent(this, BeaconMonitoringService.class), this, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isServiceBounded) {
+            unbindService(this);
+            isServiceBounded = false;
+        }
+    }
+
     //==============================================================================================
     // Listeners implementations
     //==============================================================================================
@@ -166,19 +191,16 @@ public class MainActivity extends AppCompatActivity implements
                 ProgressBar pb = (ProgressBar) findViewById(R.id.pb);
                 pb.setVisibility(View.VISIBLE);
 
-                onPathClicked();
-                /*Timer timer = new Timer();
-                TimerTask myTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        if (location != null) {
-                            onPathClicked();
-                            this.cancel();
-                        }
+                if (isServiceBounded) {
+                    // Create and send a message to the service, using a supported 'what' value
+                    Message msg = Message.obtain(null, BeaconMonitoringService.MSG_TEST, 0, 0);
+                    try {
+                        messenger.send(msg);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
                     }
-                };
-                timer.schedule(myTask, 2000, 2000);
-                break;*/
+                }
+                //onPathClicked();
         }
     }
 
@@ -407,5 +429,28 @@ public class MainActivity extends AppCompatActivity implements
         if (PathSingleton.getInstance().getPath().getListInstructions().get(1) != null)
             in.putExtra("firstInstruction", PathSingleton.getInstance().getPath().getListInstructions().get(1).getInstruction());
         sendBroadcast(in);
+    }
+
+    //==============================================================================================
+    // Service Messaging implementation
+    //==============================================================================================
+
+    // This is called when the connection with the service has been
+    // established, giving us the object we can use to
+    // interact with the service.  We are communicating with the
+    // service using a Messenger, so here we get a client-side
+    // representation of that from the raw IBinder object.
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        messenger = new Messenger(iBinder);
+        isServiceBounded = true;
+    }
+
+    // This is called when the connection with the service has been
+    // unexpectedly disconnected -- that is, its process crashed.
+    @Override
+    public void onServiceDisconnected(ComponentName className) {
+        messenger = null;
+        isServiceBounded = false;
     }
 }

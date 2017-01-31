@@ -2,10 +2,14 @@ package polytech.followit.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
@@ -34,6 +38,8 @@ public class BeaconMonitoringService extends Service implements
     private static final String TAG = BeaconMonitoringService.class.getName();
     public static final String BEACON_DETECTED = "beacon detected";
     public static final String FIRST_INSTRUCTION = "first instruction";
+    public static final int MSG_TEST = 1;
+
     private BeaconManager beaconManager;
     private Region lastDetectedRegion = new Region("", null, null, null);
 
@@ -83,12 +89,6 @@ public class BeaconMonitoringService extends Service implements
 
         });
         socket.connect();
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
     }
 
     @Override
@@ -152,46 +152,8 @@ public class BeaconMonitoringService extends Service implements
     }
 
     //==============================================================================================
-    // Socket callbacks implementation
+    // Utils
     //==============================================================================================
-
-    /*@Override
-    public void onPathFetched() throws JSONException {
-
-    }
-
-    @Override
-    public void onBroadcastNotification(String message) {
-
-    }
-
-    @Override
-    public void onPOIListFetched() {
-
-    }
-
-    @Override
-    public void onBeaconsFetched() {
-        Log.d(TAG, "ON BEACONS FETCHED");
-        ArrayList<polytech.followit.model.Beacon> listBeacon = PathSingleton.getInstance().getListAllBeacons();
-        for (polytech.followit.model.Beacon beacon : listBeacon) {
-            Region region = new Region(
-                    beacon.getName(),
-                    UUID.fromString(beacon.getUUID()),
-                    beacon.getMajor(),
-                    beacon.getMinor()
-            );
-            beaconManager.startMonitoring(region);
-        }
-        Log.d(TAG,"ON BEACONS FETCHED" + listBeacon.toString());
-    }
-
-    @Override
-    public void onNodesFetched() {
-        Log.d(TAG, "ON NODES FETCHED");
-        beaconManager.connect(this);
-        beaconManager.setMonitoringListener(this);
-    }*/
 
     private void buildAllNodes(Object... args) {
         JSONObject response = (JSONObject) args[0];
@@ -263,5 +225,40 @@ public class BeaconMonitoringService extends Service implements
             );
             beaconManager.startMonitoring(region);
         }
+    }
+
+    //==============================================================================================
+    // Messaging implementation
+    //==============================================================================================
+
+    /**
+     * Handler of incoming messages from clients.
+     */
+    class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_TEST:
+                    Toast.makeText(getApplicationContext(), "hello!", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
+
+    /**
+     * Target we publish for clients to send messages to IncomingHandler.
+     */
+    final Messenger mMessenger = new Messenger(new IncomingHandler());
+
+    /**
+     * When binding to the service, we return an interface to our messenger
+     * for sending messages to the service.
+     */
+    @Override
+    public IBinder onBind(Intent intent) {
+        Toast.makeText(getApplicationContext(), "binding", Toast.LENGTH_SHORT).show();
+        return mMessenger.getBinder();
     }
 }
