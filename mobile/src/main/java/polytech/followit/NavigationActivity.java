@@ -1,29 +1,26 @@
 package polytech.followit;
 
 import android.app.NotificationManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
@@ -32,7 +29,7 @@ import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.utility.PathSingleton;
 
-public class NavigationActivity extends FragmentActivity implements View.OnClickListener, SocketCallBack {
+public class NavigationActivity extends FragmentActivity implements View.OnClickListener, SocketCallBack, DemoFragment.OnFragmentInteractionListener {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
 
@@ -47,18 +44,10 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
     //Instruction en cours
     Instruction ongoingInstruction;
-    /**
-     * Pager fragment variables
-     */
-    /* The pager widget, which handles animation and allows swiping horizontally to access previous
-    * and next wizard steps.
-            */
-    private ViewPager mPager;
 
-    /**
-     * The pager adapter, which provides the pages to the view pager widget.
-     */
-    private PagerAdapter mPagerAdapter;
+    private ViewPager mPager;
+    private List<Instruction> mInstructionData = new ArrayList<>();
+    private DemoFragmentAdapter mAdapter;
     //==============================================================================================
     // Lifecycle
     //==============================================================================================
@@ -67,50 +56,54 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "ON create - Navigation Activity");
-        setContentView(R.layout.navigation_activity);
+        setContentView(R.layout.navigation_view_pager);
 
         PathSingleton.getInstance().setSocketCallBack(this);
 
 
+        mAdapter = new DemoFragmentAdapter(getSupportFragmentManager());
+        mPager = (ViewPager) findViewById(R.id.pager);
+
+        mPager.setAdapter(mAdapter);
+
+
         //rempli les instructions sur chaque fragment
         prepareNavigationList();
+        Log.d(TAG, "CREATE" + mInstructionData.toString());
+        mAdapter.notifyDataSetChanged();
 
-        // Instantiate a ViewPager and a PagerAdapter.
-        mPager = (ViewPager) findViewById(R.id.pager);
-        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-        mPager.setAdapter(mPagerAdapter);
     }
-
 
     @Override
-    public void onBackPressed() {
-        if (mPager.getCurrentItem() == 0) {
-            // If the user is currently looking at the first step, allow the system to handle the
-            // Back button. This calls finish() on this activity and pops the back stack.
-            super.onBackPressed();
-        } else {
-            // Otherwise, select the previous step.
-            mPager.setCurrentItem(mPager.getCurrentItem() - 1);
-        }
+    public void onFragmentInteraction(int currentDataPosition) {
+
     }
 
-    /**
-     * A simple pager adapter that represents 5 ScreenSlidePageFragment objects, in
-     * sequence.
-     */
-    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-        public ScreenSlidePagerAdapter(FragmentManager fm) {
-            super(fm);
+    @Override
+    public void onFragmentCreated(DemoFragment demoFragment) {
+        Log.d("ViewPagerDemo", "Fragment inflated: " + demoFragment.getData().instruction);
+    }
+
+    @Override
+    public void onFragmentResumed(DemoFragment demoFragment) {
+        Log.d("ViewPagerDemo", "Fragment resumed: " + demoFragment.getData().instruction);
+    }
+
+    private class DemoFragmentAdapter extends FragmentPagerAdapter {
+        public DemoFragmentAdapter(FragmentManager fm) {
+            super(fm); // super tracks this
         }
 
         @Override
         public Fragment getItem(int position) {
-            return new ScreenSlidePageFragment();
+            Log.d(TAG, "get item du fragment " + position);
+            return DemoFragment.newInstance(mInstructionData.get(position));
         }
 
         @Override
         public int getCount() {
-            return 5;
+            //Log.d(TAG, "get count du fragment " + mInstructionData.size());
+            return mInstructionData.size();
         }
     }
 
@@ -198,7 +191,8 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
             Node n = listNavigation.get(i);
             String text = "Instructions\n";
             //si il y a des instructions
-            if (!"".equals(n.getInstruction())) {
+
+            if (!"".equals(n.getInstruction().getInstruction())) {
                 text += n.getInstruction().getInstruction() + "\n";
             }
             //si il y a des POI
@@ -212,29 +206,24 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
             if (i < listNavigation.size() - 1) {
                 Node nplusun = listNavigation.get(i + 1);
                 navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text));
+                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text));
             } else {
                 //sinon juste le noeud/beacon de depart
                 navigationSteps.add(new Instruction(null, n.getName(), text));
+                //PAGER CONTENU
+                mInstructionData.add(new Instruction(null, n.getName(), text));
             }
+            //Log.d(TAG, text);
+
         }
-        //On affiche la 1ere etape
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                index = 0;
-                TextView t = (TextView) findViewById(R.id.instructions_textView);
-                t.setText(navigationSteps.get(index).instruction);
-                ongoingInstruction = navigationSteps.get(index);
-            }
-        });
     }
 
     //==============================================================================================
     // Utils
     //==============================================================================================
 
-    private void  syncDataWithService() {
-        Intent serviceIntent = new Intent(this,BeaconMonitoringService.class);
+    private void syncDataWithService() {
+        Intent serviceIntent = new Intent(this, BeaconMonitoringService.class);
         serviceIntent.putExtra("path", PathSingleton.getInstance().getPath());
         startService(serviceIntent);
     }
