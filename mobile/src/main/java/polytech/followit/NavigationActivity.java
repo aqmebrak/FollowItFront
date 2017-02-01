@@ -7,7 +7,13 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -26,9 +32,7 @@ import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.utility.PathSingleton;
 
-public class NavigationActivity extends AppCompatActivity implements
-        View.OnClickListener,
-        SocketCallBack {
+public class NavigationActivity extends FragmentActivity implements View.OnClickListener, SocketCallBack {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
 
@@ -43,7 +47,18 @@ public class NavigationActivity extends AppCompatActivity implements
 
     //Instruction en cours
     Instruction ongoingInstruction;
+    /**
+     * Pager fragment variables
+     */
+    /* The pager widget, which handles animation and allows swiping horizontally to access previous
+    * and next wizard steps.
+            */
+    private ViewPager mPager;
 
+    /**
+     * The pager adapter, which provides the pages to the view pager widget.
+     */
+    private PagerAdapter mPagerAdapter;
     //==============================================================================================
     // Lifecycle
     //==============================================================================================
@@ -55,14 +70,48 @@ public class NavigationActivity extends AppCompatActivity implements
         setContentView(R.layout.navigation_activity);
 
         PathSingleton.getInstance().setSocketCallBack(this);
+
+
+        //rempli les instructions sur chaque fragment
         prepareNavigationList();
 
-        //button listeners
-        Button b = (Button) findViewById(R.id.previous_button);
-        b.setOnClickListener(this);
-        b = (Button) findViewById(R.id.next_button);
-        b.setOnClickListener(this);
+        // Instantiate a ViewPager and a PagerAdapter.
+        mPager = (ViewPager) findViewById(R.id.pager);
+        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+        mPager.setAdapter(mPagerAdapter);
+    }
 
+
+    @Override
+    public void onBackPressed() {
+        if (mPager.getCurrentItem() == 0) {
+            // If the user is currently looking at the first step, allow the system to handle the
+            // Back button. This calls finish() on this activity and pops the back stack.
+            super.onBackPressed();
+        } else {
+            // Otherwise, select the previous step.
+            mPager.setCurrentItem(mPager.getCurrentItem() - 1);
+        }
+    }
+
+    /**
+     * A simple pager adapter that represents 5 ScreenSlidePageFragment objects, in
+     * sequence.
+     */
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+        public ScreenSlidePagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return new ScreenSlidePageFragment();
+        }
+
+        @Override
+        public int getCount() {
+            return 5;
+        }
     }
 
     @Override
@@ -82,21 +131,7 @@ public class NavigationActivity extends AppCompatActivity implements
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.previous_button:
-                if (index > 0) {
-                    index--;
-                    TextView t = (TextView) findViewById(R.id.instructions_textView);
-                    t.setText(navigationSteps.get(index).instruction);
-                    ongoingInstruction = navigationSteps.get(index);
-                }
-                break;
-            case R.id.next_button:
-                if (index < navigationSteps.size() - 1) {
-                    index++;
-                    TextView t = (TextView) findViewById(R.id.instructions_textView);
-                    t.setText(navigationSteps.get(index).instruction);
-                    ongoingInstruction = navigationSteps.get(index);
-                }
+            default:
                 break;
         }
     }
@@ -146,6 +181,7 @@ public class NavigationActivity extends AppCompatActivity implements
     @Override
     public void onPOIListFetched() {
     }
+
 
     //==============================================================================================
     // List view implementation

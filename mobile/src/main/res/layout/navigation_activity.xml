@@ -1,52 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical">
+    xmlns:instruction_cardView="http://schemas.android.com/tools"
+    android:layout_weight="50">
 
     <TextView
-        android:text="TextView"
+        android:text="Instructions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/instruction_title"
+        android:layout_alignParentEnd="true"
+        android:textAlignment="center"
+        android:textSize="24sp"
+        android:textStyle="normal|bold" />
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/instruction_cardView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/instruction_title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="18dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        instruction_cardView:cardCornerRadius="4dp">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@drawable/quantum_ic_keyboard_arrow_down_white_36"
+                android:id="@+id/arrow_image"
+                android:background="@color/cast_intro_overlay_background_color" />
+
+            <TextView
+                android:id="@+id/instructions_textView"
+                android:layout_width="373dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:text="THIS IS NOT A DRILL RUN YOU FOOL"
+                android:textAlignment="center"
+                android:textColorLink="?attr/colorBackgroundFloating"
+                android:textSize="18sp"
+                android:layout_alignBottom="@+id/arrow_image"
+                android:layout_toEndOf="@+id/arrow_image" />
+        </RelativeLayout>
+
+    </android.support.v7.widget.CardView>
+
+    <TextView
+        android:text="Points d'interet à proximité"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/poi_title"
+        android:textAlignment="center"
+        android:textStyle="normal|bold"
+        android:textSize="18sp"
+        android:layout_below="@+id/instruction_cardView"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="12dp" />
+
+    <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/instructions_textView"
-        android:layout_weight="50"
-        android:textColorLink="?attr/colorBackgroundFloating"
-        android:textStyle="normal|bold"
-        android:textAlignment="center"
-        android:textSize="24sp" />
+        android:layout_below="@+id/poi_title"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="18dp"
+        android:id="@+id/discount_list" />
 
-    <ImageView
-        android:layout_width="150dp"
-        android:layout_height="99dp"
-        app:srcCompat="@drawable/ic_navigation_black_24dp"
-        android:id="@+id/navigation"
-        android:layout_weight="0.71" />
+</RelativeLayout>
 
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:text="Previous"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:id="@+id/previous_button"
-            android:textColor="@color/navigationTextColor"
-            android:background="@drawable/navigation_background_color"  />
-
-        <Button
-            android:text="Next"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:id="@+id/next_button"
-            android:textColor="@color/navigationTextColor"
-            android:background="@drawable/navigation_background_color"  />
-    </LinearLayout>
-
-</LinearLayout>
