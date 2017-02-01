@@ -16,13 +16,11 @@ import polytech.followit.model.POI;
  * Created by Akme on 22/01/2017.
  */
 
-class MyCustomAdapter extends ArrayAdapter<POI> {
-
-
+class MyCustomPOIListAdapter extends ArrayAdapter<POI> {
 
     private ArrayList<POI> POIList;
 
-    public MyCustomAdapter(Context context, int textViewResourceId,ArrayList<POI> POIList) {
+    public MyCustomPOIListAdapter(Context context, int textViewResourceId, ArrayList<POI> POIList) {
         super(context, textViewResourceId, POIList);
         this.POIList = new ArrayList<POI>();
         this.POIList.addAll(POIList);

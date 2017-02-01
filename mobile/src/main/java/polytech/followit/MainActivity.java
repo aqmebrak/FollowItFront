@@ -2,21 +2,15 @@ package polytech.followit;
 
 
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -31,8 +25,6 @@ import android.widget.Spinner;
 import com.estimote.sdk.SystemRequirementsChecker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
@@ -46,8 +38,6 @@ import java.util.Objects;
 import polytech.followit.model.POI;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
-import polytech.followit.service.MessageHandler;
-import polytech.followit.service.NotificationBroadcast;
 import polytech.followit.utility.PathSingleton;
 
 public class MainActivity extends AppCompatActivity implements
@@ -67,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements
     public String arrivee;
     ProgressDialog progressDialog;
 
-    MyCustomAdapter dataAdapter = null;
+    MyCustomPOIListAdapter dataAdapter = null;
 
     // Messenger
     private Messenger messenger = null;
@@ -305,7 +295,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private void displayListView(ArrayList<POI> POIList) {
         //create an ArrayAdaptar from the String Array
-        dataAdapter = new MyCustomAdapter(this,
+        dataAdapter = new MyCustomPOIListAdapter(this,
                 R.layout.poi_info, POIList);
         ListView listView = (ListView) findViewById(R.id.poi_list);
         // Assign adapter to ListView

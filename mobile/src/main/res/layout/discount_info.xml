@@ -10,26 +10,16 @@
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/common_google_signin_btn_icon_dark_normal" />
 
-    <Button
-        android:id="@+id/toggle_notification_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
-        android:background="@drawable/ic_notifications_black_24dp"
-        android:layout_alignBottom="@+id/poi_image" />
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignBottom="@+id/poi_image"
-        android:layout_toStartOf="@+id/toggle_notification_button"
         android:layout_toEndOf="@+id/poi_image">
 
         <TextView
             android:id="@+id/poi_name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
             android:textSize="18sp"
@@ -42,8 +32,8 @@
         <TextView
             android:id="@+id/discount_text"
             android:text="TextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"

@@ -205,13 +205,13 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
             if (i < listNavigation.size() - 1) {
                 Node nplusun = listNavigation.get(i + 1);
-                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text));
-                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text));
+                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null));
+                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, null));
             } else {
                 //sinon juste le noeud/beacon de depart
-                navigationSteps.add(new Instruction(null, n.getName(), text));
+                navigationSteps.add(new Instruction(null, n.getName(), text, null));
                 //PAGER CONTENU
-                mInstructionData.add(new Instruction(null, n.getName(), text));
+                mInstructionData.add(new Instruction(null, n.getName(), text, null));
             }
             //Log.d(TAG, text);
 

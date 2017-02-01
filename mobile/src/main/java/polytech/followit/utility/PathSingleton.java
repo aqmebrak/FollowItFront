@@ -167,7 +167,7 @@ public class PathSingleton {
                 }
 
                 // instruction
-                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"));
+                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"),null);
                 node_instruction = instruction;
                 getInstance().getPath().getListInstructions().add(instruction);
 

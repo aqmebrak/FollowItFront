@@ -5,17 +5,36 @@ import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.util.ArrayList;
+
 public class Instruction implements Parcelable {
 
     public String nodeToGoTo;
     public String nodeFrom;
     public String instruction;
+    public ArrayList<Discount> discountList;
+
     private int indexOfInstruction = 1;
 
-    public Instruction(@Nullable String nodeToGoTo, @Nullable String nodeFrom, String instruction) {
+    public Instruction(@Nullable String nodeToGoTo, @Nullable String nodeFrom, String instruction, @Nullable ArrayList<Discount> discountList) {
         this.nodeToGoTo = nodeToGoTo;
         this.nodeFrom = nodeFrom;
         this.instruction = instruction;
+        this.discountList = new ArrayList<>();
+        this.discountList.add(new Discount("cafet", "20% de remise immédiateblablabla"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
     }
 
     protected Instruction(Parcel in) {

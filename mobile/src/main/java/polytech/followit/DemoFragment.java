@@ -7,18 +7,17 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import polytech.followit.model.Instruction;
-
-/**
- * Created by mperrin on 01/02/2017.
- */
 
 public class DemoFragment extends Fragment {
     private static final String ARG_DATA = "data";
 
     private Instruction mData;
+    MyCustomDiscountListAdapter dataAdapter = null;
+
     private OnFragmentInteractionListener mListener;
 
     public DemoFragment() {
@@ -43,16 +42,19 @@ public class DemoFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.navigation_activity, container, false);
         TextView instructionText = (TextView) v.findViewById(R.id.instructions_textView);
+        dataAdapter = new MyCustomDiscountListAdapter(getContext(), R.layout.poi_info, mData.discountList);
+        ListView listView = (ListView) v.findViewById(R.id.discount_list);
+        // Assign adapter to ListView
+        listView.setAdapter(dataAdapter);
 
-        if(mData != null) {
+        if (mData != null) {
             instructionText.setText(mData.instruction);
 
-            if(mListener != null) {
+            if (mListener != null) {
                 mListener.onFragmentCreated(this);
             }
         }
@@ -99,7 +101,9 @@ public class DemoFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(int currentDataPosition);
+
         void onFragmentCreated(DemoFragment demoFragment);
+
         void onFragmentResumed(DemoFragment demoFragment);
     }
 }
