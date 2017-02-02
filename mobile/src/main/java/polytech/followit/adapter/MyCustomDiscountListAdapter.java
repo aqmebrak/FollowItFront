@@ -1,4 +1,4 @@
-package polytech.followit;
+package polytech.followit.adapter;
 
 import android.content.Context;
 import android.util.Log;
@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import polytech.followit.R;
 import polytech.followit.model.Discount;
 
 /**
@@ -34,7 +35,6 @@ public class MyCustomDiscountListAdapter extends ArrayAdapter<Discount> {
         TextView poiName;
         TextView discountText;
         ImageButton poiImage;
-        Button toggleNotif;
     }
 
     @Override
@@ -52,8 +52,7 @@ public class MyCustomDiscountListAdapter extends ArrayAdapter<Discount> {
             holder.discountText = (TextView) convertView.findViewById(R.id.discount_text);
             holder.poiImage = (ImageButton) convertView.findViewById(R.id.poi_image);
             holder.poiImage.setImageDrawable(convertView.getResources().getDrawable(R.drawable.ic_navigation_black_24dp));
-            holder.toggleNotif = (Button) convertView.findViewById(R.id.toggle_notification_button);
-            holder.toggleNotif.setBackground(convertView.getResources().getDrawable(R.drawable.ic_notifications_black_24dp));
+
             convertView.setTag(holder);
 
         } else {

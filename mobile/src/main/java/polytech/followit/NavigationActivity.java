@@ -8,13 +8,10 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,7 +26,8 @@ import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.utility.PathSingleton;
 
-public class NavigationActivity extends FragmentActivity implements View.OnClickListener, SocketCallBack, DemoFragment.OnFragmentInteractionListener {
+
+public class NavigationActivity extends FragmentActivity implements View.OnClickListener, SocketCallBack, NavigationFragment.OnFragmentInteractionListener {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
 
@@ -47,7 +45,7 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
     private ViewPager mPager;
     private List<Instruction> mInstructionData = new ArrayList<>();
-    private DemoFragmentAdapter mAdapter;
+    private NavigationFragmentAdapter mAdapter;
     //==============================================================================================
     // Lifecycle
     //==============================================================================================
@@ -60,16 +58,16 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
         PathSingleton.getInstance().setSocketCallBack(this);
 
-
-        mAdapter = new DemoFragmentAdapter(getSupportFragmentManager());
+        //Adapter pour créer toutes les vues du Pager
+        mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
         mPager = (ViewPager) findViewById(R.id.pager);
-
         mPager.setAdapter(mAdapter);
 
 
         //rempli les instructions sur chaque fragment
         prepareNavigationList();
         Log.d(TAG, "CREATE" + mInstructionData.toString());
+        //lancement de laffichage en notifiant qu'on a construit les vues
         mAdapter.notifyDataSetChanged();
 
     }
@@ -80,24 +78,24 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
     }
 
     @Override
-    public void onFragmentCreated(DemoFragment demoFragment) {
-        Log.d("ViewPagerDemo", "Fragment inflated: " + demoFragment.getData().instruction);
+    public void onFragmentCreated(NavigationFragment navigationFragment) {
+        Log.d("ViewPagerDemo", "Fragment inflated: " + navigationFragment.getData().instruction);
     }
 
     @Override
-    public void onFragmentResumed(DemoFragment demoFragment) {
-        Log.d("ViewPagerDemo", "Fragment resumed: " + demoFragment.getData().instruction);
+    public void onFragmentResumed(NavigationFragment navigationFragment) {
+        Log.d("ViewPagerDemo", "Fragment resumed: " + navigationFragment.getData().instruction);
     }
 
-    private class DemoFragmentAdapter extends FragmentPagerAdapter {
-        public DemoFragmentAdapter(FragmentManager fm) {
+    private class NavigationFragmentAdapter extends FragmentPagerAdapter {
+        NavigationFragmentAdapter(FragmentManager fm) {
             super(fm); // super tracks this
         }
 
         @Override
         public Fragment getItem(int position) {
             Log.d(TAG, "get item du fragment " + position);
-            return DemoFragment.newInstance(mInstructionData.get(position));
+            return NavigationFragment.newInstance(mInstructionData.get(position));
         }
 
         @Override

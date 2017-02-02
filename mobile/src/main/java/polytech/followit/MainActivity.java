@@ -35,6 +35,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import polytech.followit.adapter.MyCustomPOIListAdapter;
 import polytech.followit.model.POI;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
