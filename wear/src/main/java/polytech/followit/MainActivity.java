@@ -19,7 +19,9 @@ public class MainActivity extends Activity {
         Log.d(TAG, "ON CREATE");
 
         GridViewPager pager = (GridViewPager) findViewById(R.id.grid_view_pager);
-        pager.setAdapter(new GridPagerAdapter(this, getFragmentManager()));
+        GridPagerAdapter view2D = new GridPagerAdapter(this, getFragmentManager());
+        pager.setAdapter(view2D);
+        view2D.getFragment(0,ApplicationListener.indexOfInstruction);
     }
 
     @Override

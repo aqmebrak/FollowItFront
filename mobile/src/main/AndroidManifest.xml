@@ -31,7 +31,7 @@
 
         <receiver android:name=".service.NotificationBroadcast">
             <intent-filter>
-                <action android:name="polytech.followit.FIRST_INSTRUCTION">
+                <action android:name="NEXT_INSTRUCTION">
                 </action>
             </intent-filter>
         </receiver>

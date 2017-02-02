@@ -43,15 +43,11 @@ import polytech.followit.utility.PathSingleton;
 
 public class MainActivity extends AppCompatActivity implements
         SocketCallBack,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener,
         AdapterView.OnItemSelectedListener,
         ServiceConnection {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-
-    private GoogleApiClient googleApiClient;
 
     //POI DE DEPART ET DESTINATION
     public String depart;
@@ -78,14 +74,6 @@ public class MainActivity extends AppCompatActivity implements
 
         // hide progressbar so it doesn't appear at first
         findViewById(R.id.pb).setVisibility(View.GONE);
-
-        // Build a new GoogleApiClient for the Wearable API
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-        googleApiClient.connect();
 
         PathSingleton.getInstance().setSocketCallBack(this);
 
@@ -173,10 +161,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onPathFetched() throws JSONException {
         Log.d(TAG, "ONPATHFETCHED");
-
-        syncDataWithService();
-        syncDataWithWatch();
-        sendNotification("FIRST_INSTRUCTION");
         startActivity(new Intent(this, NavigationActivity.class));
     }
 
@@ -204,6 +188,11 @@ public class MainActivity extends AppCompatActivity implements
                 progressDialog.hide();
             }
         });
+    }
+
+    @Override
+    public void onSendNotificationRequest(String action) {
+
     }
 
     @Override
@@ -266,30 +255,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void sendNotification(String action) {
-        Intent in = new Intent();
-        in.setAction("polytech.followit.FIRST_INSTRUCTION");
-        if (PathSingleton.getInstance().getPath().getListInstructions().get(1) != null)
-            in.putExtra("firstInstruction", PathSingleton.getInstance().getPath().getListInstructions().get(1).getInstruction());
-        sendBroadcast(in);
-    }
-
-    private void syncDataWithWatch() {
-        PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
-        ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();
-        String timestamp = Long.toString(System.currentTimeMillis());
-        putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
-        putDataMapReq.getDataMap().putString("timestamp", timestamp);
-        PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
-        Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
-    }
-
-    private void  syncDataWithService() {
-        Intent serviceIntent = new Intent(this,BeaconMonitoringService.class);
-        serviceIntent.putExtra("path", PathSingleton.getInstance().getPath());
-        startService(serviceIntent);
-    }
-
     //==============================================================================================
     // List view implementation
     //==============================================================================================
@@ -335,25 +300,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
         return selected;
-    }
-
-    //==============================================================================================
-    // GoogleApiClient service implementation
-    //==============================================================================================
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "onConnected: " + bundle);
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        Log.d(TAG, "onConnectionSuspended: " + cause);
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult result) {
-        Log.d(TAG, "onConnectionFailed: " + result);
     }
 
     //==============================================================================================

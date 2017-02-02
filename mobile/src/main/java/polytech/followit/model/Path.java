@@ -3,7 +3,6 @@ package polytech.followit.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Path implements Parcelable {
@@ -12,23 +11,13 @@ public class Path implements Parcelable {
     private ArrayList<Instruction> listInstructions = new ArrayList<>();
     private String source = null, destination = null;
     private ArrayList<Beacon> listBeacons = new ArrayList<>();
+    private int indexOfInstruction = 1;
 
     public Path() {
     }
 
-
-    protected Path(Parcel in) {
-        source = in.readString();
-        destination = in.readString();
-        listBeacons = in.createTypedArrayList(Beacon.CREATOR);
-    }
-
     public ArrayList<Node> getListNodes() {
         return listNodes;
-    }
-
-    public void setListNodes(ArrayList<Node> listNodes) {
-        this.listNodes = listNodes;
     }
 
     public String getSource() {
@@ -43,10 +32,6 @@ public class Path implements Parcelable {
         return listInstructions;
     }
 
-    public void setListInstructions(ArrayList<Instruction> listInstructions) {
-        this.listInstructions = listInstructions;
-    }
-
     public String getDestination() {
         return destination;
     }
@@ -59,8 +44,13 @@ public class Path implements Parcelable {
         return listBeacons;
     }
 
-    public void setListBeacons(ArrayList<Beacon> listBeacons) {
-        this.listBeacons = listBeacons;
+    public int getIndexOfInstruction() {
+        return indexOfInstruction;
+    }
+
+    public void incrementIndexOfInstruction() {
+        if (indexOfInstruction < listInstructions.size() - 1)
+            indexOfInstruction++;
     }
 
     public ArrayList<String> listInstructionsToStringArray() {
@@ -93,6 +83,30 @@ public class Path implements Parcelable {
     // Parcelable implementations
     //==============================================================================================
 
+    protected Path(Parcel in) {
+        listNodes = in.createTypedArrayList(Node.CREATOR);
+        listInstructions = in.createTypedArrayList(Instruction.CREATOR);
+        source = in.readString();
+        destination = in.readString();
+        listBeacons = in.createTypedArrayList(Beacon.CREATOR);
+        indexOfInstruction = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeTypedList(listNodes);
+        dest.writeTypedList(listInstructions);
+        dest.writeString(source);
+        dest.writeString(destination);
+        dest.writeTypedList(listBeacons);
+        dest.writeInt(indexOfInstruction);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
     public static final Creator<Path> CREATOR = new Creator<Path>() {
         @Override
         public Path createFromParcel(Parcel in) {
@@ -104,17 +118,4 @@ public class Path implements Parcelable {
             return new Path[size];
         }
     };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(source);
-        dest.writeString(destination);
-        dest.writeTypedList(listBeacons);
-    }
-
 }

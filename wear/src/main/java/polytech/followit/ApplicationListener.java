@@ -1,10 +1,14 @@
 package polytech.followit;
 
 import android.app.Application;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.wearable.view.GridViewPager;
 import android.util.Log;
 import android.view.View;
@@ -29,6 +33,7 @@ public class ApplicationListener extends Application implements
 
     public static final String TAG = ApplicationListener.class.getName();
     public static ArrayList<String> instructions;
+    public static int indexOfInstruction;
     private GoogleApiClient apiClient;
 
     @Override
@@ -71,11 +76,31 @@ public class ApplicationListener extends Application implements
                 if (item.getUri().getPath().equals("/instructions")) {
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                     instructions = dataMap.getStringArrayList("instructions");
+                    indexOfInstruction = dataMap.getInt("indexOfInstruction");
+                    sendNotification();
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
                 // DataItem deleted
             }
         }
+    }
+
+    private void sendNotification() {
+
+        Intent viewIntent = new Intent(getApplicationContext(), MainActivity.class);
+        PendingIntent viewPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, viewIntent, 0);
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
+                .setSmallIcon(R.drawable.ic_open_application)
+                .setContentTitle("Instruction")
+                .setContentText(instructions.get(indexOfInstruction))
+                .setContentIntent(viewPendingIntent)
+                .setPriority(1000)
+                .setVibrate(new long[]{1000, 1000});
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
+        // mId allows you to update the notification later on.
+        notificationManager.notify(1, mBuilder.build());
     }
 }
 

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+import android.os.Parcelable;
 import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -96,7 +97,7 @@ public class BeaconMonitoringService extends Service implements
             isStarted = true;
         }
         path = intent.getExtras().getParcelable("path");
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     /**
@@ -137,11 +138,22 @@ public class BeaconMonitoringService extends Service implements
             // Beacon detected in our path
             else {
                 Log.d(TAG,"We detected a beacon in our path");
-                try {
-                    Message msg = Message.obtain(null, MessageHandler.MSG_NEXT_INSTRUCTION);
-                    messenger.send(msg);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
+                // If the detected beacon is the arrival one
+                if (isArrivalBeacon(beacon)) {
+                    Message msg = Message.obtain(null, MessageHandler.MSG_ARRIVED_TO_DESTINATION);
+                    try {
+                        messenger.send(msg);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
+                    try {
+                        Message msg = Message.obtain(null, MessageHandler.MSG_NEXT_INSTRUCTION);
+                        messenger.send(msg);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -209,5 +221,11 @@ public class BeaconMonitoringService extends Service implements
             );
             beaconManager.startMonitoring(region);
         }
+    }
+
+    public boolean isArrivalBeacon(polytech.followit.model.Beacon beacon) {
+        if (path.getListNodes().get(path.getListNodes().size() - 1).hasBeacon())
+            return path.getListNodes().get(path.getListNodes().size() - 1).getBeacon().equals(beacon);
+        else return false;
     }
 }

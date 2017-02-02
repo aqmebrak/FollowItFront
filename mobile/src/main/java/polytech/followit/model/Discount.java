@@ -1,9 +1,9 @@
 package polytech.followit.model;
 
-/**
- * Created by Akme on 01/02/2017.
- */
-public class Discount {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Discount implements Parcelable {
 
     private String POIname;
     private String discountText;
@@ -17,15 +17,39 @@ public class Discount {
         return POIname;
     }
 
-    public void setPOIname(String POIname) {
-        this.POIname = POIname;
-    }
-
     public String getDiscountText() {
         return discountText;
     }
 
-    public void setDiscountText(String discountText) {
-        this.discountText = discountText;
+    //==============================================================================================
+    // Parcelable implementation
+    //==============================================================================================
+
+    protected Discount(Parcel in) {
+        POIname = in.readString();
+        discountText = in.readString();
     }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(POIname);
+        dest.writeString(discountText);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<Discount> CREATOR = new Creator<Discount>() {
+        @Override
+        public Discount createFromParcel(Parcel in) {
+            return new Discount(in);
+        }
+
+        @Override
+        public Discount[] newArray(int size) {
+            return new Discount[size];
+        }
+    };
 }

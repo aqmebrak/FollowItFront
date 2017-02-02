@@ -1,5 +1,6 @@
 package polytech.followit.utility;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
+import polytech.followit.R;
 import polytech.followit.model.Beacon;
 import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
@@ -131,7 +133,7 @@ public class PathSingleton {
         getInstance().socket.emit("getPOI");
     }
 
-    private static void buildPathWithNodes(Object... args) {
+    private void buildPathWithNodes(Object... args) {
         Log.d(getInstance().TAG, "BUILDPATHWITHNODES");
 
         //on clean d'abord les ARRAY de Path
@@ -167,7 +169,8 @@ public class PathSingleton {
                 }
 
                 // instruction
-                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"),null);
+                int orientation_icon = currentNode.has("orientation") ? determineOrientationIcon(currentNode.getString("orientation")) : -1;
+                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"),null, orientation_icon);
                 node_instruction = instruction;
                 getInstance().getPath().getListInstructions().add(instruction);
 
@@ -219,5 +222,18 @@ public class PathSingleton {
             e.printStackTrace();
         }
         getInstance().socketCallBack.onPOIListFetched();
+    }
+
+    private int determineOrientationIcon(String orientation){
+        switch (orientation) {
+            case "NORTH": return R.drawable.ic_north;
+            case "NORTH_EAST": return R.drawable.ic_north_east;
+            case "NORTH_WEST": return R.drawable.ic_north_west;
+            case "EAST": return R.drawable.ic_east;
+            case "WEST": return R.drawable.ic_west;
+            case "SOUTH_EAST": return R.drawable.ic_south_east;
+            case "SOUTH_WEST": return R.drawable.ic_south_west;
+        }
+        return -1;
     }
 }
