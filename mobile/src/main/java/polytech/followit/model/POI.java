@@ -70,4 +70,12 @@ public class POI implements Parcelable {
             return new POI[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "POI{" +
+                "name='" + name + '\'' +
+                ", node='" + node + '\'' +
+                '}';
+    }
 }

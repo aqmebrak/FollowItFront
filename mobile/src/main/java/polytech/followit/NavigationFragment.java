@@ -1,16 +1,21 @@
 package polytech.followit;
 
 import android.content.Context;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import polytech.followit.adapter.MyCustomDiscountListAdapter;
 import polytech.followit.model.Instruction;
+import polytech.followit.utility.PathSingleton;
 
 
 /**
@@ -49,6 +54,7 @@ public class NavigationFragment extends Fragment {
 
     /**
      * Construit le contenu du pager
+     *
      * @param inflater
      * @param container
      * @param savedInstanceState
@@ -67,6 +73,11 @@ public class NavigationFragment extends Fragment {
         ListView listView = (ListView) v.findViewById(R.id.discount_list);
         // Assign adapter to ListView
         listView.setAdapter(dataAdapter);
+
+        ImageView orientation = (ImageView) v.findViewById(R.id.orientation);
+        if (mData.getOrientationIcon() != -1) {
+            orientation.setImageDrawable(ContextCompat.getDrawable(getContext(), mData.getOrientationIcon()));
+        }
 
         if (mData != null) {
             instructionText.setText(mData.instruction);

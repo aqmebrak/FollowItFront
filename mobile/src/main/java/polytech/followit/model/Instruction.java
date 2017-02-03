@@ -80,4 +80,13 @@ public class Instruction implements Parcelable {
         }
     };
 
+    @Override
+    public String toString() {
+        return "Instruction{" +
+                "nodeToGoTo='" + nodeToGoTo + '\'' +
+                ", nodeFrom='" + nodeFrom + '\'' +
+                ", instruction='" + instruction + '\'' +
+                ", discountList=" + discountList +
+                '}';
+    }
 }

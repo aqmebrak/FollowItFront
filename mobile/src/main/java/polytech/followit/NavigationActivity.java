@@ -41,15 +41,8 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
     //recupere la liste en RAW de la navigation
     ArrayList<Node> listNavigation = null;
-
-    //liste des etapes en Instruction
-    ArrayList<Instruction> navigationSteps = null;
-
-    //index position sur quelle étape on se trouve
-    int index = 0;
-
+    ArrayList<Instruction> navigationSteps;
     //Instruction en cours
-    Instruction ongoingInstruction;
 
     private ViewPager mPager;
     private List<Instruction> mInstructionData = new ArrayList<>();
@@ -66,7 +59,7 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         Log.d(TAG, "ON create - Navigation Activity");
         setContentView(R.layout.navigation_view_pager);
-
+        navigationSteps = new ArrayList<>();
         PathSingleton.getInstance().setSocketCallBack(this);
 
         //Adapter pour créer toutes les vues du Pager
@@ -76,7 +69,7 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
         //rempli les instructions sur chaque fragment
         prepareNavigationList();
-        Log.d(TAG, "CREATE" + mInstructionData.toString());
+
         //lancement de laffichage en notifiant qu'on a construit les vues
         mAdapter.notifyDataSetChanged();
 
@@ -88,8 +81,8 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
                 .build();
         googleApiClient.connect();
 
-        syncDataWithService();
-        syncDataWithWatch();
+        //syncDataWithService();
+        //syncDataWithWatch();
         sendNotification("NEXT_INSTRUCTION");
 
     }
@@ -120,11 +113,21 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
     @Override
     public void onPathFetched() throws JSONException {
         Log.d(TAG, "ON PATH FETCHED NavigationActivity");
-
-        syncDataWithService();
-        syncDataWithWatch();
-
-        prepareNavigationList();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPager.setAdapter(null);
+                mAdapter = null;
+                getSupportFragmentManager().getFragments().clear();
+                mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
+                mPager.setAdapter(mAdapter);
+                mInstructionData.clear();
+                prepareNavigationList();
+                mAdapter.notifyDataSetChanged();
+            }
+        });
+        //syncDataWithService();
+        //syncDataWithWatch();
     }
 
 
@@ -147,10 +150,10 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
                 //on cherche l'étape active
                 Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
 
-                Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
+                //Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
                 JSONObject o = new JSONObject();
                 try {
-                    o.put("source", ongoingInstruction.nodeToGoTo);
+                    o.put("source", mInstructionData.get(PathSingleton.getInstance().getPath().getIndexOfInstruction()).nodeToGoTo);
                     o.put("destination", PathSingleton.getInstance().getPath().getDestination());
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -177,14 +180,17 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
     private void prepareNavigationList() {
         //ON PREPARE LA LISTE DES ETAPES
-        navigationSteps = new ArrayList<>();
         listNavigation = PathSingleton.getInstance().getPath().getListNodes();
         Log.d(TAG, "PREPARENAVIGATIONLIST");
+        Log.d(TAG, listNavigation.toString());
 
         for (int i = 0; i < listNavigation.size(); i++) {
 
             Node n = listNavigation.get(i);
-            String text = "Instructions\n";
+            String text = "";
+            if (i != listNavigation.size() - 1) {
+                text = "Instructions\n";
+            }
             //si il y a des instructions
 
             if (!"".equals(n.getInstruction().getInstruction())) {
@@ -199,17 +205,18 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
             }
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
             if (i < listNavigation.size() - 1) {
+                Log.d(TAG, "if" + n.getName());
                 Node nplusun = listNavigation.get(i + 1);
                 navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
                 mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
             } else {
                 //sinon juste le noeud/beacon de depart
+                text += "\nVous etes arrivé !";
                 navigationSteps.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
                 //PAGER CONTENU
                 mInstructionData.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
             }
             //Log.d(TAG, text);
-
         }
     }
 
@@ -244,8 +251,8 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
         Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
     }
 
-    private void  syncDataWithService() {
-        Intent serviceIntent = new Intent(this,BeaconMonitoringService.class);
+    private void syncDataWithService() {
+        Intent serviceIntent = new Intent(this, BeaconMonitoringService.class);
         serviceIntent.putExtra("path", PathSingleton.getInstance().getPath());
         startService(serviceIntent);
     }
@@ -261,12 +268,12 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
     @Override
     public void onFragmentCreated(NavigationFragment navigationFragment) {
-        Log.d("ViewPagerDemo", "Fragment inflated: " + navigationFragment.getData().instruction);
+        //Log.d("ViewPagerDemo", "Fragment inflated: " + navigationFragment.getData().instruction);
     }
 
     @Override
     public void onFragmentResumed(NavigationFragment navigationFragment) {
-        Log.d("ViewPagerDemo", "Fragment resumed: " + navigationFragment.getData().instruction);
+        //Log.d("ViewPagerDemo", "Fragment resumed: " + navigationFragment.getData().instruction);
     }
 
     private class NavigationFragmentAdapter extends FragmentPagerAdapter {
@@ -276,7 +283,6 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
         @Override
         public Fragment getItem(int position) {
-            Log.d(TAG, "get item du fragment " + position);
             return NavigationFragment.newInstance(mInstructionData.get(position));
         }
 
@@ -284,6 +290,12 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
         public int getCount() {
             //Log.d(TAG, "get count du fragment " + mInstructionData.size());
             return mInstructionData.size();
+        }
+
+        @Override
+        public int getItemPosition(Object object) {
+            Log.d(TAG, "getItemPosition");
+            return POSITION_NONE;
         }
     }
 
