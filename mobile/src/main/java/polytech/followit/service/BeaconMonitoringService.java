@@ -8,6 +8,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.Parcelable;
 import android.os.RemoteException;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -102,12 +103,13 @@ public class BeaconMonitoringService extends Service implements
 
     /**
      * We enter a region we're monitoring
+     *
      * @param region Region we just entered
-     * @param list List of beacon detected
+     * @param list   List of beacon detected
      */
     @Override
     public void onEnteredRegion(Region region, List<Beacon> list) {
-        Log.d(TAG, "ON ENTERED REGION"+path.toString());
+        Log.d(TAG, "ON ENTERED REGION" + path.toString());
 
         // We need to convert all @Estimote.Beacon objects to our @Followit.Beacon objects
         ArrayList<polytech.followit.model.Beacon> listDetectedBeacon = new ArrayList<>();
@@ -122,39 +124,19 @@ public class BeaconMonitoringService extends Service implements
 
         for (polytech.followit.model.Beacon beacon : listDetectedBeacon) {
             // Beacon not in our path
-            if (!path.isBeaconInside(beacon)) {
-                Log.d(TAG, "detected beacon :" + beacon + " not in our path. Source node : "+path.getSource());
-                try {
-                    Bundle msg_data = new Bundle();
-                    msg_data.putString("source", path.getSource());
-                    msg_data.putString("destination", path.getDestination());
-                    Message msg = Message.obtain(null, MessageHandler.MSG_ASK_NEW_PATH);
-                    msg.setData(msg_data);
-                    messenger.send(msg);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
+            if (!path.getListBeacons().contains(beacon)) {
+                Log.d(TAG, "detected beacon :" + beacon + " not in our path. Source node : " + path.getSource());
+                Bundle msg_data = new Bundle();
+                msg_data.putString("source", path.getSource());
+                msg_data.putString("destination", path.getDestination());
+                sendMessage(MessageHandler.MSG_ASK_NEW_PATH, msg_data);
             }
             // Beacon detected in our path
             else {
-                Log.d(TAG,"We detected a beacon in our path");
+                Log.d(TAG, "We detected a beacon in our path");
                 // If the detected beacon is the arrival one
-                if (isArrivalBeacon(beacon)) {
-                    Message msg = Message.obtain(null, MessageHandler.MSG_ARRIVED_TO_DESTINATION);
-                    try {
-                        messenger.send(msg);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
-                else {
-                    try {
-                        Message msg = Message.obtain(null, MessageHandler.MSG_NEXT_INSTRUCTION);
-                        messenger.send(msg);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                }
+                if (isArrivalBeacon(beacon)) sendMessage(MessageHandler.MSG_ARRIVED_TO_DESTINATION, null);
+                else sendMessage(MessageHandler.MSG_NEXT_INSTRUCTION, null);
             }
         }
     }
@@ -180,7 +162,7 @@ public class BeaconMonitoringService extends Service implements
 
     @Override
     public void onDestroy() {
-        Log.d(TAG,"Service stopped and destroyed");
+        Log.d(TAG, "Service stopped and destroyed");
         super.onDestroy();
     }
 
@@ -191,6 +173,7 @@ public class BeaconMonitoringService extends Service implements
     /**
      * Build a list of all beacons fetched by the socket a
      * and monitor regions based on the beacons fetched
+     *
      * @param args response from socket
      */
     private void buildAllBeacons(Object... args) {
@@ -223,9 +206,19 @@ public class BeaconMonitoringService extends Service implements
         }
     }
 
-    public boolean isArrivalBeacon(polytech.followit.model.Beacon beacon) {
-        if (path.getListNodes().get(path.getListNodes().size() - 1).hasBeacon())
+    private boolean isArrivalBeacon(polytech.followit.model.Beacon beacon) {
+        if (path.getListNodes().get(path.getListNodes().size() - 1).getBeacon() != null) {
             return path.getListNodes().get(path.getListNodes().size() - 1).getBeacon().equals(beacon);
-        else return false;
+        } else return false;
+    }
+
+    private void sendMessage(int what, @Nullable Bundle data) {
+        try {
+            Message msg = Message.obtain(null, what);
+            if (data != null) msg.setData(data);
+            messenger.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -34,6 +34,7 @@ public class ApplicationListener extends Application implements
     public static final String TAG = ApplicationListener.class.getName();
     public static ArrayList<String> instructions;
     public static int indexOfInstruction;
+    public static String orientation;
     private GoogleApiClient apiClient;
 
     @Override
@@ -77,6 +78,7 @@ public class ApplicationListener extends Application implements
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                     instructions = dataMap.getStringArrayList("instructions");
                     indexOfInstruction = dataMap.getInt("indexOfInstruction");
+                    orientation = dataMap.getString("orientation");
                     sendNotification();
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
@@ -91,16 +93,28 @@ public class ApplicationListener extends Application implements
         PendingIntent viewPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, viewIntent, 0);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
-                .setSmallIcon(R.drawable.ic_open_application)
+                .setSmallIcon(getIconByOrientation())
                 .setContentTitle("Instruction")
                 .setContentText(instructions.get(indexOfInstruction))
                 .setContentIntent(viewPendingIntent)
                 .setPriority(1000)
-                .setVibrate(new long[]{1000, 1000});
+                .setVibrate(new long[]{1000, 300});
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
-        // mId allows you to update the notification later on.
         notificationManager.notify(1, mBuilder.build());
+    }
+
+    private int getIconByOrientation() {
+        switch (orientation) {
+            case "NORTH": return R.drawable.ic_north;
+            case "NORTH_EAST": return R.drawable.ic_north_east;
+            case "NORTH_WEST": return R.drawable.ic_north_west;
+            case "EAST": return R.drawable.ic_east;
+            case "WEST": return R.drawable.ic_west;
+            case "SOUTH_EAST": return R.drawable.ic_south_east;
+            case "SOUTH_WEST": return R.drawable.ic_south_west;
+            default: return -1;
+        }
     }
 }
 

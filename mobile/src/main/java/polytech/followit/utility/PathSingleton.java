@@ -145,7 +145,7 @@ public class PathSingleton {
         ArrayList<POI> node_poi;
         Instruction node_instruction;
         double node_xCoord, node_yCoord;
-        Beacon node_beacon = null;
+        Beacon node_beacon;
 
         try {
             JSONObject response = (JSONObject) args[0];
@@ -169,8 +169,9 @@ public class PathSingleton {
                 }
 
                 // instruction
+                String orientation = currentNode.has("orientation") ? currentNode.getString("orientation") : null;
                 int orientation_icon = currentNode.has("orientation") ? determineOrientationIcon(currentNode.getString("orientation")) : -1;
-                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"),null, orientation_icon);
+                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"),null, orientation_icon, orientation);
                 node_instruction = instruction;
                 getInstance().getPath().getListInstructions().add(instruction);
 
@@ -188,6 +189,7 @@ public class PathSingleton {
                     );
                     getInstance().getPath().getListBeacons().add(node_beacon);
                 }
+                else node_beacon = null;
 
                 // Node final object
                 Node node = new Node(

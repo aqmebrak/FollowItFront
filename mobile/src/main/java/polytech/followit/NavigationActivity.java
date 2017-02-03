@@ -134,7 +134,7 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
             @Override
             public void run() {
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(NavigationActivity.this)
+                /*NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(NavigationActivity.this)
                         .setSmallIcon(R.drawable.ic_stat_name)
                         .setContentTitle("Mise `a jour de la carte")
                         .setContentText("La carte a ete mise a jour, nous avons synchronise votre chemin");
@@ -155,7 +155,7 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                PathSingleton.getInstance().askForPath(o);
+                PathSingleton.getInstance().askForPath(o);*/
             }
         });
     }
@@ -166,6 +166,7 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
     @Override
     public void onSendNotificationRequest(String action) {
+        Log.d(TAG, "onSendNotificationRequest : "+action);
         sendNotification(action);
     }
 
@@ -199,13 +200,13 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
             if (i < listNavigation.size() - 1) {
                 Node nplusun = listNavigation.get(i + 1);
-                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon()));
-                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon()));
+                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
+                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
             } else {
                 //sinon juste le noeud/beacon de depart
-                navigationSteps.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon()));
+                navigationSteps.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
                 //PAGER CONTENU
-                mInstructionData.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon()));
+                mInstructionData.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
             }
             //Log.d(TAG, text);
 
@@ -232,10 +233,12 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
         ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();
         int indexOfInstruction = PathSingleton.getInstance().getPath().getIndexOfInstruction();
+        String orientation = PathSingleton.getInstance().getPath().getListInstructions().get(indexOfInstruction).getOrientation();
         String timestamp = Long.toString(System.currentTimeMillis());
 
         putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
         putDataMapReq.getDataMap().putInt("indexOfInstruction", indexOfInstruction);
+        putDataMapReq.getDataMap().putString("orientation", orientation);
         putDataMapReq.getDataMap().putString("timestamp", timestamp);
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         Wearable.DataApi.putDataItem(googleApiClient, putDataReq);

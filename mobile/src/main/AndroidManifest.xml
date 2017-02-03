@@ -31,8 +31,8 @@
 
         <receiver android:name=".service.NotificationBroadcast">
             <intent-filter>
-                <action android:name="NEXT_INSTRUCTION">
-                </action>
+                <action android:name="NEXT_INSTRUCTION" />
+                <action android:name="ARRIVED_TO_DESTINATION" />
             </intent-filter>
         </receiver>
 

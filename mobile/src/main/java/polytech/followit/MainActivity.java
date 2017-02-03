@@ -161,6 +161,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onPathFetched() throws JSONException {
         Log.d(TAG, "ONPATHFETCHED");
+        // Dismiss progressDialog hence avoid leak windows
+        progressDialog.dismiss();
         startActivity(new Intent(this, NavigationActivity.class));
     }
 

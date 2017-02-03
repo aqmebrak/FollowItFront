@@ -12,16 +12,19 @@ public class Instruction implements Parcelable {
     public String nodeFrom;
     public String instruction;
     private int orientationIcon;
+    private String orientation;
     public ArrayList<Discount> discountList;
 
     public Instruction(@Nullable String nodeToGoTo,
                        @Nullable String nodeFrom, String instruction,
                        @Nullable ArrayList<Discount> discountList,
-                       @Nullable int orientationIcon) {
+                       int orientationIcon,
+                       @Nullable String orientation) {
         this.nodeToGoTo = nodeToGoTo;
         this.nodeFrom = nodeFrom;
         this.instruction = instruction;
         this.orientationIcon = orientationIcon;
+        this.orientation = orientation;
         this.discountList = new ArrayList<>();
         this.discountList.add(new Discount("cafet", "20% de remise immédiateblablabla"));
         this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
@@ -33,6 +36,10 @@ public class Instruction implements Parcelable {
 
     public int getOrientationIcon() {
         return orientationIcon;
+    }
+
+    public String getOrientation() {
+        return orientation;
     }
 
     //==============================================================================================

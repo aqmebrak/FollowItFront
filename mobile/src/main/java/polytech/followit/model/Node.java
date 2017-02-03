@@ -39,18 +39,15 @@ public class Node implements Parcelable {
         return beacon;
     }
 
-    public boolean hasBeacon() {
-        return this.beacon != null;
-    }
-
     @Override
     public String toString() {
         return "Node{" +
                 "name='" + name + '\'' +
                 ", poi=" + poi +
-                ", instruction='" + instruction + '\'' +
+                ", instruction=" + instruction +
                 ", xCoord=" + xCoord +
                 ", yCoord=" + yCoord +
+                ", beacon=" + beacon +
                 '}';
     }
 
