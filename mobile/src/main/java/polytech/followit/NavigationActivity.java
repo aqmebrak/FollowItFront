@@ -1,17 +1,21 @@
 package polytech.followit;
 
-import android.app.NotificationManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Messenger;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 
@@ -22,7 +26,6 @@ import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +38,12 @@ import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.utility.PathSingleton;
 
 
-public class NavigationActivity extends FragmentActivity implements View.OnClickListener, SocketCallBack, NavigationFragment.OnFragmentInteractionListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class NavigationActivity extends FragmentActivity implements
+        View.OnClickListener,
+        SocketCallBack,
+        NavigationFragment.OnFragmentInteractionListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, ServiceConnection {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
 
@@ -49,6 +57,10 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
     private NavigationFragmentAdapter mAdapter;
 
     private GoogleApiClient googleApiClient;
+
+    // Messenger
+    private Messenger messenger = null;
+    private boolean isServiceBounded;
 
     //==============================================================================================
     // Lifecycle
@@ -81,20 +93,13 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
                 .build();
         googleApiClient.connect();
 
-        //syncDataWithService();
-        //syncDataWithWatch();
+        // Create and bind the service
+        bindService(new Intent(this, BeaconMonitoringService.class), this, Context.BIND_AUTO_CREATE);
+
+        syncDataWithService();
+        syncDataWithWatch();
         sendNotification("NEXT_INSTRUCTION");
 
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
     }
 
     //==============================================================================================
@@ -169,8 +174,20 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
 
     @Override
     public void onSendNotificationRequest(String action) {
-        Log.d(TAG, "onSendNotificationRequest : "+action);
+        Log.d(TAG, "onSendNotificationRequest : " + action);
         sendNotification(action);
+    }
+
+    /**
+     * Fired when the arrival beacon is detected
+     */
+    @Override
+    public void onArrival() {
+        Log.d(TAG, "onArrival - Navigation Activity");
+        unbindService(this);
+        googleApiClient.disconnect();
+        stopService(new Intent(this, BeaconMonitoringService.class));
+
     }
 
 
@@ -209,14 +226,14 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
                     text += "Déplacez vous vers le magasin le plus proche";
                 Log.d(TAG, "if" + n.getName());
                 Node nplusun = listNavigation.get(i + 1);
-                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
-                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
+                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(), null));
+                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(), null));
             } else {
                 //sinon juste le noeud/beacon de depart
                 text += "\nVous etes arrivé !";
                 navigationSteps.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
                 //PAGER CONTENU
-                mInstructionData.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
+                mInstructionData.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(), null));
             }
             //Log.d(TAG, text);
         }
@@ -318,5 +335,30 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    //==============================================================================================
+    // Service Messaging implementation
+    //==============================================================================================
+
+    // This is called when the connection with the service has been
+    // established, giving us the object we can use to
+    // interact with the service.  We are communicating with the
+    // service using a Messenger, so here we get a client-side
+    // representation of that from the raw IBinder object.
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+        Log.d(TAG, "Service connected, ready to be bind");
+        messenger = new Messenger(iBinder);
+        isServiceBounded = true;
+    }
+
+    // This is called when the connection with the service has been
+    // unexpectedly disconnected -- that is, its process crashed.
+    @Override
+    public void onServiceDisconnected(ComponentName className) {
+        Log.e(TAG, "Service disconnected");
+        messenger = null;
+        isServiceBounded = false;
     }
 }

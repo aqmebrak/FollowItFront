@@ -163,8 +163,12 @@ public class BeaconMonitoringService extends Service implements
     @Override
     public void onDestroy() {
         Log.d(TAG, "Service stopped and destroyed");
-        super.onDestroy();
+        socket.disconnect();
+        beaconManager.disconnect();
+        //super.onDestroy();
     }
+
+
 
     //==============================================================================================
     // Utils

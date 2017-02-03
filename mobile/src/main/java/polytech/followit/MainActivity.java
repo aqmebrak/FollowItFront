@@ -44,8 +44,7 @@ import polytech.followit.utility.PathSingleton;
 public class MainActivity extends AppCompatActivity implements
         SocketCallBack,
         View.OnClickListener,
-        AdapterView.OnItemSelectedListener,
-        ServiceConnection {
+        AdapterView.OnItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -55,11 +54,6 @@ public class MainActivity extends AppCompatActivity implements
     ProgressDialog progressDialog;
 
     MyCustomPOIListAdapter dataAdapter = null;
-
-    // Messenger
-    private Messenger messenger = null;
-    private boolean isServiceBounded;
-
 
     //==============================================================================================
     // Lifecycle
@@ -98,9 +92,6 @@ public class MainActivity extends AppCompatActivity implements
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.setCancelable(true);
         progressDialog.show();
-
-        // Create and bind the service
-        bindService(new Intent(this, BeaconMonitoringService.class), this, Context.BIND_AUTO_CREATE);
     }
 
 
@@ -114,26 +105,6 @@ public class MainActivity extends AppCompatActivity implements
         getPathButton.setVisibility(View.VISIBLE);
 
         SystemRequirementsChecker.checkWithDefaultDialogs(this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG,"On destroy");
-        if (isServiceBounded) {
-            unbindService(this);
-            isServiceBounded = false;
-        }
     }
 
     //==============================================================================================
@@ -194,6 +165,11 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onSendNotificationRequest(String action) {
+
+    }
+
+    @Override
+    public void onArrival() {
 
     }
 
@@ -302,30 +278,5 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
         return selected;
-    }
-
-    //==============================================================================================
-    // Service Messaging implementation
-    //==============================================================================================
-
-    // This is called when the connection with the service has been
-    // established, giving us the object we can use to
-    // interact with the service.  We are communicating with the
-    // service using a Messenger, so here we get a client-side
-    // representation of that from the raw IBinder object.
-    @Override
-    public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-        Log.d(TAG, "Service connected, ready to be bind");
-        messenger = new Messenger(iBinder);
-        isServiceBounded = true;
-    }
-
-    // This is called when the connection with the service has been
-    // unexpectedly disconnected -- that is, its process crashed.
-    @Override
-    public void onServiceDisconnected(ComponentName className) {
-        Log.e(TAG, "Service disconnected");
-        messenger = null;
-        isServiceBounded = false;
     }
 }

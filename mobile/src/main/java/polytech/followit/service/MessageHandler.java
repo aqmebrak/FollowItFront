@@ -35,6 +35,7 @@ class MessageHandler extends Handler {
             case MSG_ARRIVED_TO_DESTINATION:
                 Log.d(TAG,"IN MSG_ARRIVED_TO_DESTINATION");
                 PathSingleton.getInstance().getSocketCallBack().onSendNotificationRequest("ARRIVED_TO_DESTINATION");
+                PathSingleton.getInstance().getSocketCallBack().onArrival();
             default:
                 super.handleMessage(msg);
         }

@@ -12,4 +12,5 @@ public interface SocketCallBack {
     void onBroadcastNotification(String message);
     void onPOIListFetched();
     void onSendNotificationRequest(String action);
+    void onArrival();
 }
