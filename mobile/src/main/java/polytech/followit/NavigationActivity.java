@@ -205,6 +205,8 @@ public class NavigationActivity extends FragmentActivity implements View.OnClick
             }
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
             if (i < listNavigation.size() - 1) {
+                if(i == 0)
+                    text += "Déplacez vous vers le magasin le plus proche";
                 Log.d(TAG, "if" + n.getName());
                 Node nplusun = listNavigation.get(i + 1);
                 navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
