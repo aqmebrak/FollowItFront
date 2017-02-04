@@ -1,17 +1,15 @@
 package polytech.followit;
 
 import android.app.Application;
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.wearable.view.GridViewPager;
 import android.util.Log;
-import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -79,7 +77,7 @@ public class ApplicationListener extends Application implements
                     instructions = dataMap.getStringArrayList("instructions");
                     indexOfInstruction = dataMap.getInt("indexOfInstruction");
                     listOrientation = dataMap.getStringArrayList("listOrientation");
-                    sendNotification();
+                    sendNotificationOnWatch();
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
                 // DataItem deleted
@@ -87,13 +85,14 @@ public class ApplicationListener extends Application implements
         }
     }
 
-    private void sendNotification() {
+    private void sendNotificationOnWatch() {
 
         Intent viewIntent = new Intent(getApplicationContext(), MainActivity.class);
         PendingIntent viewPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, viewIntent, 0);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(getIconByOrientation(listOrientation.get(indexOfInstruction)))
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.background))
                 .setContentTitle("Instruction")
                 .setContentText(instructions.get(indexOfInstruction))
                 .setContentIntent(viewPendingIntent)
@@ -106,14 +105,26 @@ public class ApplicationListener extends Application implements
 
     public static int getIconByOrientation(String orientation) {
         switch (orientation) {
-            case "NORTH": return R.drawable.ic_north;
-            case "NORTH_EAST": return R.drawable.ic_north_east;
-            case "NORTH_WEST": return R.drawable.ic_north_west;
-            case "EAST": return R.drawable.ic_east;
-            case "WEST": return R.drawable.ic_west;
-            case "SOUTH_EAST": return R.drawable.ic_south_east;
-            case "SOUTH_WEST": return R.drawable.ic_south_west;
-            default: return -1;
+            case "NORTH":
+                return R.drawable.ic_north;
+            case "NORTH_EAST":
+                return R.drawable.ic_north_east;
+            case "NORTH_WEST":
+                return R.drawable.ic_north_west;
+            case "EAST":
+                return R.drawable.ic_east;
+            case "WEST":
+                return R.drawable.ic_west;
+            case "SOUTH_EAST":
+                return R.drawable.ic_south_east;
+            case "SOUTH_WEST":
+                return R.drawable.ic_south_west;
+            case "DEPARTURE":
+                return R.drawable.ic_departure;
+            case "ARRIVAL":
+                return R.drawable.ic_arrival;
+            default:
+                return R.drawable.ic_default;
         }
     }
 }

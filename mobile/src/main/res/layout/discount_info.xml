@@ -24,7 +24,6 @@
                 android:maxHeight="200dp"
                 android:adjustViewBounds="true"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/hm1"
                 android:background="#FFFFFF" />
 
             <LinearLayout
