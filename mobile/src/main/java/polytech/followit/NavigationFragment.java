@@ -23,6 +23,7 @@ import polytech.followit.utility.PathSingleton;
  */
 public class NavigationFragment extends Fragment {
     private static final String ARG_DATA = "data";
+    private final String TAG = NavigationFragment.class.getSimpleName();
 
     //La classe qui contient les données à afficher
     private Instruction mData;
@@ -48,7 +49,8 @@ public class NavigationFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mData = (Instruction) getArguments().getParcelable(ARG_DATA);
+            mData = getArguments().getParcelable(ARG_DATA);
+            Log.d(TAG,"OnCreate - Navigation fragment : " + mData);
         }
     }
 
@@ -75,11 +77,8 @@ public class NavigationFragment extends Fragment {
         listView.setAdapter(dataAdapter);
 
         ImageView orientation = (ImageView) v.findViewById(R.id.orientation);
-        if (mData.getOrientationIcon() != -1) {
-            orientation.setImageDrawable(ContextCompat.getDrawable(getContext(), mData.getOrientationIcon()));
-        } else {
-            ((ViewGroup) orientation.getParent()).removeView(orientation);
-        }
+        orientation.setImageDrawable(ContextCompat.getDrawable(getContext(), PathSingleton.determineOrientationIcon(mData.getOrientation())));
+
 
         if (mData != null) {
             instructionText.setText(mData.instruction);

@@ -34,7 +34,7 @@ public class ApplicationListener extends Application implements
     public static final String TAG = ApplicationListener.class.getName();
     public static ArrayList<String> instructions;
     public static int indexOfInstruction;
-    public static String orientation;
+    public static ArrayList<String> listOrientation;
     private GoogleApiClient apiClient;
 
     @Override
@@ -78,7 +78,7 @@ public class ApplicationListener extends Application implements
                     DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
                     instructions = dataMap.getStringArrayList("instructions");
                     indexOfInstruction = dataMap.getInt("indexOfInstruction");
-                    orientation = dataMap.getString("orientation");
+                    listOrientation = dataMap.getStringArrayList("listOrientation");
                     sendNotification();
                 }
             } else if (event.getType() == DataEvent.TYPE_DELETED) {
@@ -93,18 +93,18 @@ public class ApplicationListener extends Application implements
         PendingIntent viewPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, viewIntent, 0);
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext())
-                .setSmallIcon(getIconByOrientation())
+                .setSmallIcon(getIconByOrientation(listOrientation.get(indexOfInstruction)))
                 .setContentTitle("Instruction")
                 .setContentText(instructions.get(indexOfInstruction))
                 .setContentIntent(viewPendingIntent)
                 .setPriority(1000)
-                .setVibrate(new long[]{1000, 300});
+                .setVibrate(new long[]{0, 300});
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         notificationManager.notify(1, mBuilder.build());
     }
 
-    private int getIconByOrientation() {
+    public static int getIconByOrientation(String orientation) {
         switch (orientation) {
             case "NORTH": return R.drawable.ic_north;
             case "NORTH_EAST": return R.drawable.ic_north_east;

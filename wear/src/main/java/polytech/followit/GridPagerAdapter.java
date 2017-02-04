@@ -23,7 +23,18 @@ public class GridPagerAdapter extends FragmentGridPagerAdapter {
 
         if (ApplicationListener.instructions != null) {
             for (int i = 1; i < ApplicationListener.instructions.size() - 1; i++) {
-                pagerRow.addColumn(CardFragment.create("Instruction", ApplicationListener.instructions.get(i)));
+                CardFragment fragment;
+                if (ApplicationListener.listOrientation.get(i) == null) {
+                    fragment = CardFragment.create("Instruction", ApplicationListener.instructions.get(i));
+                }
+                else {
+                    int icon = ApplicationListener.getIconByOrientation(ApplicationListener.listOrientation.get(i));
+                    fragment = CardFragment.create(
+                            "Instruction",
+                            ApplicationListener.instructions.get(i),
+                            icon);
+                }
+                pagerRow.addColumn(fragment);
             }
             rowList.add(pagerRow);
         }

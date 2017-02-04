@@ -208,8 +208,8 @@ public class MainActivity extends AppCompatActivity implements
         //si nos deux noeuds ont été bien récupérés, on créé le JSON
         if (!Objects.equals(nodeSource, "") && !Objects.equals(nodeDestination, "")) {
             //on en profite pour enregistrer les noeuds dans PATH
-            PathSingleton.getInstance().getPath().setSource(nodeSource);
-            PathSingleton.getInstance().getPath().setDestination(nodeDestination);
+            //PathSingleton.getInstance().getPath().setSource(nodeSource);
+            //PathSingleton.getInstance().getPath().setDestination(nodeDestination);
             JSONObject itinerary = new JSONObject();
             try {
                 itinerary.put("source", nodeSource);
@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity implements
                 // When clicked, show a toast with the TextView text
                 POI poi = (POI) parent.getItemAtPosition(position);
                 CheckBox cb = (CheckBox) view.findViewById(R.id.checkBox1);
-                if (!Objects.equals(poi.getName(), PathSingleton.getInstance().getPath().getSource())) {
+                if (true/*!Objects.equals(poi.getName(), PathSingleton.getInstance().getPath().getSource())*/) {
                     if (poi.isSelected()) {
                         poi.setSelected(false);
                         cb.setChecked(false);

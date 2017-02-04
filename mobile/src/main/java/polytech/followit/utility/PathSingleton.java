@@ -1,6 +1,5 @@
 package polytech.followit.utility;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -32,10 +31,7 @@ public class PathSingleton {
     private SocketCallBack socketCallBack;
     private Socket socket;
 
-    private double angleDeviationToNextBeacon;
-
     private PathSingleton() {
-        path = new Path();
         try {
             socket = IO.socket("https://followit-backend.herokuapp.com/");
         } catch (URISyntaxException e) {
@@ -104,20 +100,8 @@ public class PathSingleton {
         this.socketCallBack = socketCallBack;
     }
 
-    public Socket getSocket() {
-        return socket;
-    }
-
-    public void setSocket(Socket socket) {
-        this.socket = socket;
-    }
-
     public ArrayList<POI> getListAllPoi() {
         return listAllPoi;
-    }
-
-    public void setListAllPoi(ArrayList<POI> listAllPoi) {
-        this.listAllPoi = listAllPoi;
     }
 
     //==============================================================================================
@@ -136,15 +120,17 @@ public class PathSingleton {
     private void buildPathWithNodes(Object... args) {
         Log.d(getInstance().TAG, "BUILDPATHWITHNODES");
 
-        //on clean d'abord les ARRAY de Path
-        getInstance().getPath().getListInstructions().clear();
-        getInstance().getPath().getListNodes().clear();
-        getInstance().getPath().getListNodes().clear();
+        //Path attributes
+        ArrayList<Node> listNodes = new ArrayList<>();
+        ArrayList<Instruction> listInstructions = new ArrayList<>();
+        ArrayList<String> listOrientationInstructions = new ArrayList<>();
+        ArrayList<Beacon> listBeacons = new ArrayList<>();
+        String source = null, destination = null;
 
+        // Node attributes
         String node_name;
         ArrayList<POI> node_poi;
         Instruction node_instruction;
-        double node_xCoord, node_yCoord;
         Beacon node_beacon;
 
         try {
@@ -156,12 +142,14 @@ public class PathSingleton {
             // Create nodes
             for (int i = 0; i < arrayPath.length(); i++) {
                 currentNode = arrayPath.getJSONObject(i);
-                node_poi = new ArrayList<>();
 
                 // name
                 node_name = currentNode.getString("node");
+                if (i == 0) source = node_name;
+                if (i == arrayPath.length() - 1) destination = node_name;
 
                 // poi
+                node_poi = new ArrayList<>();
                 for (int j = 0; j < currentNode.getJSONArray("POIList").length(); j++) {
                     JSONObject currentPOI = (JSONObject) currentNode.getJSONArray("POIList").get(j);
                     String poi_name = currentPOI.getString("poi");
@@ -171,15 +159,13 @@ public class PathSingleton {
                 }
 
                 // instruction
-                String orientation = currentNode.has("orientation") ? currentNode.getString("orientation") : null;
-                int orientation_icon = currentNode.has("orientation") ? determineOrientationIcon(currentNode.getString("orientation")) : -1;
-                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"), null, orientation_icon, orientation);
-                node_instruction = instruction;
-                getInstance().getPath().getListInstructions().add(instruction);
-
-                // coordinate
-                node_xCoord = currentNode.getJSONObject("coord").getDouble("x");
-                node_yCoord = currentNode.getJSONObject("coord").getDouble("y");
+                String orientation = null;
+                if (i == 0) orientation = "DEPARTURE";
+                else if (i == arrayPath.length() - 1) orientation = "ARRIVAL";
+                else if (currentNode.has("orientation")) orientation = currentNode.getString("orientation");
+                node_instruction = new Instruction(null, null, currentNode.getString("instruction"), null, orientation);
+                listInstructions.add(node_instruction);
+                listOrientationInstructions.add(orientation);
 
                 // beacon
                 if (currentNode.has("beacon")) {
@@ -189,7 +175,7 @@ public class PathSingleton {
                             currentNode.getJSONObject("beacon").getInt("major"),
                             currentNode.getJSONObject("beacon").getInt("minor")
                     );
-                    getInstance().getPath().getListBeacons().add(node_beacon);
+                    listBeacons.add(node_beacon);
                 } else node_beacon = null;
 
                 // Node final object
@@ -197,13 +183,12 @@ public class PathSingleton {
                         node_name,
                         node_poi,
                         node_instruction,
-                        node_xCoord,
-                        node_yCoord,
                         node_beacon
                 );
 
-                getInstance().getPath().getListNodes().add(node);
+                listNodes.add(node);
             }
+            path = new Path(listNodes, listInstructions, listBeacons, listOrientationInstructions, source, destination);
             getInstance().getSocketCallBack().onPathFetched();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -227,7 +212,7 @@ public class PathSingleton {
         getInstance().socketCallBack.onPOIListFetched();
     }
 
-    private int determineOrientationIcon(String orientation) {
+    public static int determineOrientationIcon(String orientation) {
         switch (orientation) {
             case "NORTH":
                 return R.drawable.ic_north;
@@ -243,7 +228,12 @@ public class PathSingleton {
                 return R.drawable.ic_south_east;
             case "SOUTH_WEST":
                 return R.drawable.ic_south_west;
+            case "DEPARTURE":
+                return R.drawable.ic_departure;
+            case "ARRIVAL":
+                return R.drawable.ic_arrival;
+            default:
+                return R.drawable.ic_default;
         }
-        return -1;
     }
 }

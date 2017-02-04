@@ -11,29 +11,22 @@ public class Instruction implements Parcelable {
     public String nodeToGoTo;
     public String nodeFrom;
     public String instruction;
-    private int orientationIcon;
     private String orientation;
     public ArrayList<Discount> discountList;
 
     public Instruction(@Nullable String nodeToGoTo,
                        @Nullable String nodeFrom, String instruction,
                        @Nullable ArrayList<Discount> discountList,
-                       int orientationIcon,
                        @Nullable String orientation) {
         this.nodeToGoTo = nodeToGoTo;
         this.nodeFrom = nodeFrom;
         this.instruction = instruction;
-        this.orientationIcon = orientationIcon;
         this.orientation = orientation;
         this.discountList = discountList;
     }
 
     public String getInstruction() {
         return instruction;
-    }
-
-    public int getOrientationIcon() {
-        return orientationIcon;
     }
 
     public String getOrientation() {
@@ -48,7 +41,6 @@ public class Instruction implements Parcelable {
         nodeToGoTo = in.readString();
         nodeFrom = in.readString();
         instruction = in.readString();
-        orientationIcon = in.readInt();
         discountList = in.createTypedArrayList(Discount.CREATOR);
     }
 
@@ -57,7 +49,6 @@ public class Instruction implements Parcelable {
         dest.writeString(nodeToGoTo);
         dest.writeString(nodeFrom);
         dest.writeString(instruction);
-        dest.writeInt(orientationIcon);
         dest.writeTypedList(discountList);
     }
 

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
 
 import polytech.followit.NavigationActivity;
 import polytech.followit.R;
@@ -24,16 +23,17 @@ public class NotificationBroadcast extends BroadcastReceiver {
         switch (intent.getAction()) {
             case "NEXT_INSTRUCTION":
                 String instruction = intent.getExtras().getString("instruction");
-                int icon = intent.getExtras().getInt("icon");
+                int icon = intent.getExtras().getInt("icon") == -1 ? R.drawable.ic_departure : intent.getExtras().getInt("icon");
                 notificationBuilder(context, 1, icon, "Instruction", instruction, viewPendingIntent);
                 break;
             case "ARRIVED_TO_DESTINATION":
-                notificationBuilder(context, 1, R.drawable.ic_arrived,
+                notificationBuilder(context, 1, R.drawable.ic_arrival,
                         "Arrivé !", "Vous êtes arrivé à destination", viewPendingIntent);
         }
     }
 
     public void notificationBuilder(Context context, int nId, int icon, String title, String body, @Nullable PendingIntent intent) {
+
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(icon)

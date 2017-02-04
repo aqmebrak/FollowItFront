@@ -11,15 +11,12 @@ public class Node implements Parcelable {
     private String name;
     private ArrayList<POI> poi;
     private Instruction instruction;
-    private double xCoord, yCoord;
     private Beacon beacon;
 
-    public Node(String name, ArrayList<POI> poi, @Nullable Instruction instruction, double xCoord, double yCoord, @Nullable Beacon beacon) {
+    public Node(String name, ArrayList<POI> poi, @Nullable Instruction instruction, @Nullable Beacon beacon) {
         this.name = name;
         this.poi = poi;
         this.instruction = instruction;
-        this.xCoord = xCoord;
-        this.yCoord = yCoord;
         this.beacon = beacon;
     }
 
@@ -45,8 +42,6 @@ public class Node implements Parcelable {
                 "name='" + name + '\'' +
                 ", poi=" + poi +
                 ", instruction=" + instruction +
-                ", xCoord=" + xCoord +
-                ", yCoord=" + yCoord +
                 ", beacon=" + beacon +
                 '}';
     }
@@ -59,8 +54,6 @@ public class Node implements Parcelable {
         name = in.readString();
         poi = in.createTypedArrayList(POI.CREATOR);
         instruction = in.readParcelable(Instruction.class.getClassLoader());
-        xCoord = in.readDouble();
-        yCoord = in.readDouble();
         beacon = in.readParcelable(Beacon.class.getClassLoader());
     }
 
@@ -69,8 +62,6 @@ public class Node implements Parcelable {
         dest.writeString(name);
         dest.writeTypedList(poi);
         dest.writeParcelable(instruction, flags);
-        dest.writeDouble(xCoord);
-        dest.writeDouble(yCoord);
         dest.writeParcelable(beacon, flags);
     }
 

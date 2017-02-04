@@ -7,13 +7,26 @@ import java.util.ArrayList;
 
 public class Path implements Parcelable {
 
-    private ArrayList<Node> listNodes = new ArrayList<>();
-    private ArrayList<Instruction> listInstructions = new ArrayList<>();
-    private String source = null, destination = null;
-    private ArrayList<Beacon> listBeacons = new ArrayList<>();
-    private int indexOfInstruction = 1;
+    private ArrayList<Node> listNodes;
+    private ArrayList<Instruction> listInstructions;
+    private ArrayList<String> listOrientationInstructions; // Needed for the wearable
+    private String source, destination;
+    private ArrayList<Beacon> listBeacons;
+    private int indexOfInstruction;
 
-    public Path() {
+    public Path(ArrayList<Node> listNodes,
+                ArrayList<Instruction> listInstructions,
+                ArrayList<Beacon> listBeacons,
+                ArrayList<String> listOrientationInstructions,
+                String source,
+                String destination) {
+        this.listNodes = listNodes;
+        this.listInstructions = listInstructions;
+        this.listBeacons = listBeacons;
+        this.listOrientationInstructions = listOrientationInstructions;
+        this.source = source;
+        this.destination = destination;
+        this.indexOfInstruction = 0;
     }
 
     public ArrayList<Node> getListNodes() {
@@ -48,6 +61,10 @@ public class Path implements Parcelable {
         return indexOfInstruction;
     }
 
+    public ArrayList<String> getListOrientationInstructions() {
+        return listOrientationInstructions;
+    }
+
     public void incrementIndexOfInstruction() {
         if (indexOfInstruction < listInstructions.size() - 1)
             indexOfInstruction++;
@@ -59,13 +76,6 @@ public class Path implements Parcelable {
             result.add(instruction.getInstruction());
         }
         return result;
-    }
-
-    public boolean isBeaconInside(Beacon beacon) {
-        for (Beacon b: listBeacons) {
-            if (b.equals(beacon)) return true;
-        }
-        return false;
     }
 
     @Override

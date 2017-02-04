@@ -3,7 +3,6 @@ package polytech.followit;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -17,9 +16,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.View;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -37,19 +34,20 @@ import polytech.followit.model.Discount;
 import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
+import polytech.followit.model.Path;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.utility.PathSingleton;
 
 
 public class NavigationActivity extends FragmentActivity implements
-        View.OnClickListener,
         SocketCallBack,
         NavigationFragment.OnFragmentInteractionListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, ServiceConnection {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
+    private Path path = PathSingleton.getInstance().getPath();
 
     //recupere la liste en RAW de la navigation
     ArrayList<Node> listNavigation = null;
@@ -102,21 +100,13 @@ public class NavigationActivity extends FragmentActivity implements
 
         syncDataWithService();
         syncDataWithWatch();
-        sendNotification("NEXT_INSTRUCTION");
+        sendNotificationOnPhone("NEXT_INSTRUCTION");
 
     }
 
     //==============================================================================================
     // Listeners implementation
     //==============================================================================================
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            default:
-                break;
-        }
-    }
 
 
     @Override
@@ -176,10 +166,15 @@ public class NavigationActivity extends FragmentActivity implements
     public void onPOIListFetched() {
     }
 
+    /**
+     * Fired when the service needs to fire a notification
+     * @param action Defining the type of notification
+     */
     @Override
     public void onSendNotificationRequest(String action) {
         Log.d(TAG, "onSendNotificationRequest : " + action);
-        sendNotification(action);
+        sendNotificationOnPhone(action);
+        syncDataWithWatch();
     }
 
     /**
@@ -201,7 +196,7 @@ public class NavigationActivity extends FragmentActivity implements
 
     private void prepareNavigationList() {
         //ON PREPARE LA LISTE DES ETAPES
-        listNavigation = PathSingleton.getInstance().getPath().getListNodes();
+        listNavigation = path.getListNodes();
         Log.d(TAG, "PREPARENAVIGATIONLIST");
         Log.d(TAG, listNavigation.toString());
 
@@ -230,14 +225,14 @@ public class NavigationActivity extends FragmentActivity implements
                     text += "Déplacez vous vers le magasin le plus proche";
                 Log.d(TAG, "if" + n.getName());
                 Node nplusun = listNavigation.get(i + 1);
-                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(), null));
-                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(), null));
+                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
+                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
             } else {
                 //sinon juste le noeud/beacon de depart
                 text += "\nVous etes arrivé !";
-                navigationSteps.add(new Instruction(null, n.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(),null));
+                navigationSteps.add(new Instruction(null, n.getName(), text, listDiscounts,path.getListNodes().get(i).getInstruction().getOrientation()));
                 //PAGER CONTENU
-                mInstructionData.add(new Instruction(null, n.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(), null));
+                mInstructionData.add(new Instruction(null, n.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
             }
             //Log.d(TAG, text);
         }
@@ -247,29 +242,36 @@ public class NavigationActivity extends FragmentActivity implements
     // Utils
     //==============================================================================================
 
-    private void sendNotification(String action) {
+    /**
+     * Send a broadcast to the NotificationBroadcast class
+     * @param action Defining the type of notification
+     */
+    private void sendNotificationOnPhone(String action) {
         Intent in = new Intent();
         in.setAction(action);
-        int instructionIndex = PathSingleton.getInstance().getPath().getIndexOfInstruction();
-        if (PathSingleton.getInstance().getPath().getListInstructions().get(instructionIndex) != null) {
-            in.putExtra("instruction", PathSingleton.getInstance().getPath().getListInstructions().get(instructionIndex).getInstruction());
-            if (PathSingleton.getInstance().getPath().getListInstructions().get(instructionIndex).getOrientationIcon() != -1)
-                in.putExtra("icon", PathSingleton.getInstance().getPath().getListInstructions().get(instructionIndex).getOrientationIcon());
-        }
+
+        int instructionIndex = path.getIndexOfInstruction();
+        String orientation = path.getListInstructions().get(instructionIndex).getOrientation();
+        in.putExtra("instruction", path.getListInstructions().get(instructionIndex).getInstruction());
+        in.putExtra("icon",PathSingleton.determineOrientationIcon(orientation));
+
         sendBroadcast(in);
     }
 
+
     private void syncDataWithWatch() {
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
-        ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();
-        int indexOfInstruction = PathSingleton.getInstance().getPath().getIndexOfInstruction();
-        String orientation = PathSingleton.getInstance().getPath().getListInstructions().get(indexOfInstruction).getOrientation();
-        String timestamp = Long.toString(System.currentTimeMillis());
+
+        ArrayList<String> instructions = path.listInstructionsToStringArray();
+        ArrayList<String> listOrientation = path.getListOrientationInstructions();
+        Log.d(TAG, "list all orientations : " + path.getListOrientationInstructions());
+        String timestamp = Long.toString(System.currentTimeMillis()); // To force the data to be updated
+        int indexOfInstruction = path.getIndexOfInstruction();
 
         putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
-        putDataMapReq.getDataMap().putInt("indexOfInstruction", indexOfInstruction);
-        putDataMapReq.getDataMap().putString("orientation", orientation);
+        putDataMapReq.getDataMap().putStringArrayList("listOrientation", listOrientation);
         putDataMapReq.getDataMap().putString("timestamp", timestamp);
+        putDataMapReq.getDataMap().putInt("indexOfInstruction", indexOfInstruction);
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         Wearable.DataApi.putDataItem(googleApiClient, putDataReq);
     }
