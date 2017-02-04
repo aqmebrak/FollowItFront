@@ -25,9 +25,7 @@ public class Instruction implements Parcelable {
         this.instruction = instruction;
         this.orientationIcon = orientationIcon;
         this.orientation = orientation;
-        this.discountList = new ArrayList<>();
-        this.discountList.add(new Discount("cafet", "20% de remise immédiateblablabla"));
-        this.discountList.add(new Discount("LEARNING", "OUVERT TOUS LES JOURS JUSQUA 21h"));
+        this.discountList = discountList;
     }
 
     public String getInstruction() {

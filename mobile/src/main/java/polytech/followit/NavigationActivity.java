@@ -1,5 +1,6 @@
 package polytech.followit;
 
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,6 +15,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
@@ -26,10 +28,12 @@ import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import polytech.followit.model.Discount;
 import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
@@ -142,7 +146,7 @@ public class NavigationActivity extends FragmentActivity implements
             @Override
             public void run() {
 
-                /*NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(NavigationActivity.this)
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(NavigationActivity.this)
                         .setSmallIcon(R.drawable.ic_stat_name)
                         .setContentTitle("Mise `a jour de la carte")
                         .setContentText("La carte a ete mise a jour, nous avons synchronise votre chemin");
@@ -163,7 +167,7 @@ public class NavigationActivity extends FragmentActivity implements
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                PathSingleton.getInstance().askForPath(o);*/
+                PathSingleton.getInstance().askForPath(o);
             }
         });
     }
@@ -202,6 +206,7 @@ public class NavigationActivity extends FragmentActivity implements
         Log.d(TAG, listNavigation.toString());
 
         for (int i = 0; i < listNavigation.size(); i++) {
+            ArrayList<Discount> listDiscounts = new ArrayList<>();
 
             Node n = listNavigation.get(i);
             String text = "";
@@ -214,10 +219,9 @@ public class NavigationActivity extends FragmentActivity implements
                 text += n.getInstruction().getInstruction() + "\n";
             }
             //si il y a des POI
-            if (n.getPoi() != null && !n.getPoi().isEmpty()) {
-                text += "Points d'interets à proximité: \n";
+           if (n.getPoi() != null && !n.getPoi().isEmpty()) {
                 for (POI s : n.getPoi()) {
-                    text += "\t- " + s.getName();
+                    listDiscounts.add(new Discount(s.getName(),s.getDiscount()));
                 }
             }
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
@@ -226,14 +230,14 @@ public class NavigationActivity extends FragmentActivity implements
                     text += "Déplacez vous vers le magasin le plus proche";
                 Log.d(TAG, "if" + n.getName());
                 Node nplusun = listNavigation.get(i + 1);
-                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(), null));
-                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, null, n.getInstruction().getOrientationIcon(), null));
+                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(), null));
+                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(), null));
             } else {
                 //sinon juste le noeud/beacon de depart
                 text += "\nVous etes arrivé !";
-                navigationSteps.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(),null));
+                navigationSteps.add(new Instruction(null, n.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(),null));
                 //PAGER CONTENU
-                mInstructionData.add(new Instruction(null, n.getName(), text, null, n.getInstruction().getOrientationIcon(), null));
+                mInstructionData.add(new Instruction(null, n.getName(), text, listDiscounts, n.getInstruction().getOrientationIcon(), null));
             }
             //Log.d(TAG, text);
         }

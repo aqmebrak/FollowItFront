@@ -149,7 +149,7 @@ public class PathSingleton {
 
         try {
             JSONObject response = (JSONObject) args[0];
-            Log.d(getInstance().TAG,"BUILD PATH WITH NODES RESPONSE : "+response);
+            Log.d(getInstance().TAG, "BUILD PATH WITH NODES RESPONSE : " + response);
             JSONArray arrayPath = response.getJSONArray("map");
             JSONObject currentNode;
 
@@ -163,15 +163,17 @@ public class PathSingleton {
 
                 // poi
                 for (int j = 0; j < currentNode.getJSONArray("POIList").length(); j++) {
-                    String poi_name = (String) currentNode.getJSONArray("POIList").get(j);
-                    POI poi = new POI(poi_name, node_name, false);
+                    JSONObject currentPOI = (JSONObject) currentNode.getJSONArray("POIList").get(j);
+                    String poi_name = currentPOI.getString("poi");
+                    String poi_discount = currentPOI.has("discount") ? (String) currentPOI.get("discount") : "Pas de promotion pour ce magasin";
+                    POI poi = new POI(poi_name, node_name, poi_discount, false);
                     node_poi.add(poi);
                 }
 
                 // instruction
                 String orientation = currentNode.has("orientation") ? currentNode.getString("orientation") : null;
                 int orientation_icon = currentNode.has("orientation") ? determineOrientationIcon(currentNode.getString("orientation")) : -1;
-                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"),null, orientation_icon, orientation);
+                Instruction instruction = new Instruction(null, null, currentNode.getString("instruction"), null, orientation_icon, orientation);
                 node_instruction = instruction;
                 getInstance().getPath().getListInstructions().add(instruction);
 
@@ -188,8 +190,7 @@ public class PathSingleton {
                             currentNode.getJSONObject("beacon").getInt("minor")
                     );
                     getInstance().getPath().getListBeacons().add(node_beacon);
-                }
-                else node_beacon = null;
+                } else node_beacon = null;
 
                 // Node final object
                 Node node = new Node(
@@ -226,15 +227,22 @@ public class PathSingleton {
         getInstance().socketCallBack.onPOIListFetched();
     }
 
-    private int determineOrientationIcon(String orientation){
+    private int determineOrientationIcon(String orientation) {
         switch (orientation) {
-            case "NORTH": return R.drawable.ic_north;
-            case "NORTH_EAST": return R.drawable.ic_north_east;
-            case "NORTH_WEST": return R.drawable.ic_north_west;
-            case "EAST": return R.drawable.ic_east;
-            case "WEST": return R.drawable.ic_west;
-            case "SOUTH_EAST": return R.drawable.ic_south_east;
-            case "SOUTH_WEST": return R.drawable.ic_south_west;
+            case "NORTH":
+                return R.drawable.ic_north;
+            case "NORTH_EAST":
+                return R.drawable.ic_north_east;
+            case "NORTH_WEST":
+                return R.drawable.ic_north_west;
+            case "EAST":
+                return R.drawable.ic_east;
+            case "WEST":
+                return R.drawable.ic_west;
+            case "SOUTH_EAST":
+                return R.drawable.ic_south_east;
+            case "SOUTH_WEST":
+                return R.drawable.ic_south_west;
         }
         return -1;
     }

@@ -77,6 +77,8 @@ public class NavigationFragment extends Fragment {
         ImageView orientation = (ImageView) v.findViewById(R.id.orientation);
         if (mData.getOrientationIcon() != -1) {
             orientation.setImageDrawable(ContextCompat.getDrawable(getContext(), mData.getOrientationIcon()));
+        } else {
+            ((ViewGroup) orientation.getParent()).removeView(orientation);
         }
 
         if (mData != null) {

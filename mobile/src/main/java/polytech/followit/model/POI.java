@@ -8,7 +8,16 @@ public class POI implements Parcelable {
 
     private String name = null;
     private String node = null;
+    private String discount = null;
     private boolean selected = false;
+
+    public POI(String name, String node, String discount, boolean selected) {
+        super();
+        this.name = name;
+        this.node = node;
+        this.discount = discount;
+        this.selected = selected;
+    }
 
     public POI(String name, String node, boolean selected) {
         super();
@@ -37,6 +46,11 @@ public class POI implements Parcelable {
         return node;
     }
 
+    public String getDiscount() {
+        return discount;
+    }
+
+
     //==============================================================================================
     // Parcelable implementation
     //==============================================================================================
@@ -44,6 +58,7 @@ public class POI implements Parcelable {
     protected POI(Parcel in) {
         name = in.readString();
         node = in.readString();
+        discount = in.readString();
         selected = in.readByte() != 0;
     }
 
@@ -51,6 +66,7 @@ public class POI implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(name);
         dest.writeString(node);
+        dest.writeString(discount);
         dest.writeByte((byte) (selected ? 1 : 0));
     }
 

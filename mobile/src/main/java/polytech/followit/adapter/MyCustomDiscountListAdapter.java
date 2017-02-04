@@ -17,9 +17,6 @@ import java.util.ArrayList;
 import polytech.followit.R;
 import polytech.followit.model.Discount;
 
-/**
- * Created by Akme on 01/02/2017.
- */
 
 public class MyCustomDiscountListAdapter extends ArrayAdapter<Discount> {
 
