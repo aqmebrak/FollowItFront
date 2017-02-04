@@ -14,51 +14,48 @@
         android:text="Instructions"
         android:textAlignment="center"
         android:textSize="24sp"
-        android:textStyle="normal|bold" />
+        android:textColor="@color/common_google_signin_btn_text_dark_focused" />
 
     <android.support.v7.widget.CardView
         android:id="@+id/instruction_cardView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/instruction_title"
         android:layout_marginLeft="24dp"
         android:layout_marginRight="18dp"
         android:layout_marginTop="18dp"
-        instruction_cardView:cardCornerRadius="4dp">
+        instruction_cardView:cardCornerRadius="4dp"
+        app:cardBackgroundColor="#FFFFFF">
 
-        <RelativeLayout
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/instruction_title"
-            android:layout_marginTop="10dp">
+            android:layout_height="match_parent">
 
             <ImageView
                 android:id="@+id/orientation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:background="@color/cast_intro_overlay_background_color"
+                android:background="#FF283593"
                 android:padding="12dp"
-                app:srcCompat="@drawable/ic_east" />
+                app:srcCompat="@drawable/ic_arrival"
+                android:layout_weight="1" />
 
             <TextView
                 android:id="@+id/instructions_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_toEndOf="@+id/orientation"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:text="Vous etes arrivé !"
                 android:textAlignment="center"
                 android:textColorLink="?attr/colorBackgroundFloating"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                android:layout_weight="20" />
+        </LinearLayout>
 
-
-        </RelativeLayout>
     </android.support.v7.widget.CardView>
 
     <TextView
@@ -71,15 +68,16 @@
         android:text="Points d'interet à proximité"
         android:textAlignment="center"
         android:textSize="18sp"
+        android:textColor="@color/common_google_signin_btn_text_light_focused"
         android:textStyle="normal|bold" />
 
-    <ListView
+
+    <android.support.v7.widget.RecyclerView
         android:id="@+id/discount_list"
-        android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_width="match_parent"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/poi_title"
-        android:layout_marginTop="18dp" />
+        android:layout_below="@+id/poi_title"/>
 
 </RelativeLayout>
 

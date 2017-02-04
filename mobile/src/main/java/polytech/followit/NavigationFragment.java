@@ -1,10 +1,12 @@
 package polytech.followit;
 
 import android.content.Context;
-import android.graphics.drawable.Icon;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,7 +15,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import polytech.followit.adapter.MyCustomDiscountListAdapter;
+import polytech.followit.adapter.RecyclerViewAdapter;
 import polytech.followit.model.Instruction;
 import polytech.followit.utility.PathSingleton;
 
@@ -28,7 +30,7 @@ public class NavigationFragment extends Fragment {
     //La classe qui contient les données à afficher
     private Instruction mData;
     //L'adapter pour afficher le contenu de la liste
-    MyCustomDiscountListAdapter dataAdapter = null;
+    RecyclerViewAdapter dataAdapter = null;
 
     private OnFragmentInteractionListener mListener;
 
@@ -50,7 +52,7 @@ public class NavigationFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mData = getArguments().getParcelable(ARG_DATA);
-            Log.d(TAG,"OnCreate - Navigation fragment : " + mData);
+            Log.d(TAG, "OnCreate - Navigation fragment : " + mData);
         }
     }
 
@@ -71,14 +73,19 @@ public class NavigationFragment extends Fragment {
         TextView instructionText = (TextView) v.findViewById(R.id.instructions_textView);
 
         //construction de la liste
-        dataAdapter = new MyCustomDiscountListAdapter(getContext(), R.layout.poi_info, mData.discountList);
-        ListView listView = (ListView) v.findViewById(R.id.discount_list);
-        // Assign adapter to ListView
-        listView.setAdapter(dataAdapter);
+
+        RecyclerViewAdapter adapter = new RecyclerViewAdapter(mData.discountList);
+        RecyclerView myView = (RecyclerView) v.findViewById(R.id.discount_list);
+        myView.setHasFixedSize(true);
+        myView.setAdapter(adapter);
+        LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        llm.setOrientation(LinearLayoutManager.VERTICAL);
+        myView.setLayoutManager(llm);
 
         ImageView orientation = (ImageView) v.findViewById(R.id.orientation);
-        orientation.setImageDrawable(ContextCompat.getDrawable(getContext(), PathSingleton.determineOrientationIcon(mData.getOrientation())));
-
+        Drawable icon;
+        icon = ContextCompat.getDrawable(getContext(), PathSingleton.determineOrientationIcon(mData.getOrientation()));
+        orientation.setImageDrawable(icon);
 
         if (mData != null) {
             instructionText.setText(mData.instruction);

@@ -51,7 +51,6 @@ public class NavigationActivity extends FragmentActivity implements
 
     //recupere la liste en RAW de la navigation
     ArrayList<Node> listNavigation = null;
-    ArrayList<Instruction> navigationSteps;
     //Instruction en cours
 
     private ViewPager mPager;
@@ -73,7 +72,7 @@ public class NavigationActivity extends FragmentActivity implements
         super.onCreate(savedInstanceState);
         Log.d(TAG, "ON create - Navigation Activity");
         setContentView(R.layout.navigation_view_pager);
-        navigationSteps = new ArrayList<>();
+
         PathSingleton.getInstance().setSocketCallBack(this);
 
         //Adapter pour créer toutes les vues du Pager
@@ -205,36 +204,27 @@ public class NavigationActivity extends FragmentActivity implements
 
             Node n = listNavigation.get(i);
             String text = "";
-            if (i != listNavigation.size() - 1) {
-                text = "Instructions\n";
-            }
-            //si il y a des instructions
 
+            //si il y a des instructions
             if (!"".equals(n.getInstruction().getInstruction())) {
                 text += n.getInstruction().getInstruction() + "\n";
             }
+
             //si il y a des POI
-           if (n.getPoi() != null && !n.getPoi().isEmpty()) {
+            if (n.getPoi() != null && !n.getPoi().isEmpty()) {
                 for (POI s : n.getPoi()) {
-                    listDiscounts.add(new Discount(s.getName(),s.getDiscount()));
+                    listDiscounts.add(new Discount(s.getName(), s.getDiscount()));
                 }
             }
+
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
             if (i < listNavigation.size() - 1) {
-                if(i == 0)
-                    text += "Déplacez vous vers le magasin le plus proche";
-                Log.d(TAG, "if" + n.getName());
                 Node nplusun = listNavigation.get(i + 1);
-                navigationSteps.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
                 mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
             } else {
-                //sinon juste le noeud/beacon de depart
-                text += "\nVous etes arrivé !";
-                navigationSteps.add(new Instruction(null, n.getName(), text, listDiscounts,path.getListNodes().get(i).getInstruction().getOrientation()));
-                //PAGER CONTENU
+                //sinon juste le noeud/beacon de ic_depart
                 mInstructionData.add(new Instruction(null, n.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
             }
-            //Log.d(TAG, text);
         }
     }
 
