@@ -167,6 +167,7 @@ public class NavigationActivity extends FragmentActivity implements
 
     /**
      * Fired when the service needs to fire a notification
+     *
      * @param action Defining the type of notification
      */
     @Override
@@ -234,6 +235,7 @@ public class NavigationActivity extends FragmentActivity implements
 
     /**
      * Send a broadcast to the NotificationBroadcast class
+     *
      * @param action Defining the type of notification
      */
     private void sendNotificationOnPhone(String action) {
@@ -243,7 +245,7 @@ public class NavigationActivity extends FragmentActivity implements
         int instructionIndex = path.getIndexOfInstruction();
         String orientation = path.getListInstructions().get(instructionIndex).getOrientation();
         in.putExtra("instruction", path.getListInstructions().get(instructionIndex).getInstruction());
-        in.putExtra("icon",PathSingleton.determineOrientationIcon(orientation));
+        in.putExtra("icon", PathSingleton.determineOrientationIcon(orientation));
 
         sendBroadcast(in);
     }

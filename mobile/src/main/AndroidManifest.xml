@@ -15,7 +15,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".MainActivity" />
+        <activity android:name=".SelectArrivalActivity" />
+        <activity android:name=".SelectDepartureActivity" />
         <activity android:name=".NavigationActivity" />
         <activity android:name=".SplashScreen">
             <intent-filter>

@@ -92,6 +92,7 @@ public class POI implements Parcelable {
         return "POI{" +
                 "name='" + name + '\'' +
                 ", node='" + node + '\'' +
+                ", selected='" + selected + '\'' +
                 '}';
     }
 }

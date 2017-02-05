@@ -74,10 +74,10 @@ public class NavigationFragment extends Fragment {
 
         //construction de la liste
 
-        RecyclerViewAdapter adapter = new RecyclerViewAdapter(mData.discountList);
+        dataAdapter = new RecyclerViewAdapter(mData.discountList);
         RecyclerView myView = (RecyclerView) v.findViewById(R.id.discount_list);
         myView.setHasFixedSize(true);
-        myView.setAdapter(adapter);
+        myView.setAdapter(dataAdapter);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         llm.setOrientation(LinearLayoutManager.VERTICAL);
         myView.setLayoutManager(llm);
