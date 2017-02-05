@@ -66,7 +66,7 @@ public class Path implements Parcelable {
     }
 
     public void incrementIndexOfInstruction() {
-        if (indexOfInstruction < listInstructions.size() - 1)
+        if (indexOfInstruction < listInstructions.size())
             indexOfInstruction++;
     }
 
