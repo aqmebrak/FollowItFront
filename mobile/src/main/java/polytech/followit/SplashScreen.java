@@ -1,15 +1,16 @@
 package polytech.followit;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Window;
+import android.widget.ImageView;
 
-/**
- * Created by Akme on 23/01/2017.
- */
-
-public class SplashScreen extends AppCompatActivity {
+public class SplashScreen extends Activity {
 
     /**
      * Duration of wait
@@ -19,7 +20,12 @@ public class SplashScreen extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.splash_screen);
+
+        ImageView imageView = (ImageView) findViewById(R.id.imageView);
+        imageView.setImageResource(R.drawable.logo);
+
 
         /* New Handler to start the Menu-Activity
          * and close this Splash-Screen after some seconds.*/

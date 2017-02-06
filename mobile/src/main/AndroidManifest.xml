@@ -18,7 +18,8 @@
         <activity android:name=".SelectArrivalActivity" />
         <activity android:name=".SelectDepartureActivity" />
         <activity android:name=".NavigationActivity" />
-        <activity android:name=".SplashScreen">
+        <activity android:name=".SplashScreen"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
