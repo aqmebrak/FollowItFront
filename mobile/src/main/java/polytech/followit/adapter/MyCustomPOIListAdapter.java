@@ -1,6 +1,9 @@
 package polytech.followit.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 
 import java.util.ArrayList;
@@ -33,6 +37,7 @@ public class MyCustomPOIListAdapter extends ArrayAdapter<POI> {
 
     private class ViewHolder {
         RadioButton name;
+        ImageView poiImage;
     }
 
     public ArrayList<POI> getPOIList() {
@@ -51,6 +56,15 @@ public class MyCustomPOIListAdapter extends ArrayAdapter<POI> {
 
             holder = new ViewHolder();
             holder.name = (RadioButton) convertView.findViewById(R.id.radioButton);
+            if (POIList.get(position).getImageB64() != null && !POIList.get(position).getImageB64().isEmpty()) {
+                holder.poiImage = (ImageView) convertView.findViewById(R.id.poi_list_image);
+                Log.d("RECYCLER", "ON a une image");
+                String decodeString = POIList.get(position).getImageB64();
+                decodeString = decodeString.replace("data:image/png;base64,", "");
+                byte[] data = Base64.decode(decodeString, Base64.DEFAULT);
+                Bitmap decodedByte = BitmapFactory.decodeByteArray(data, 0, data.length);
+                holder.poiImage.setImageBitmap(decodedByte);
+            }
             convertView.setTag(holder);
 
         } else {
@@ -70,7 +84,7 @@ public class MyCustomPOIListAdapter extends ArrayAdapter<POI> {
                 //si ce n'est pas la meme checkbox, alors on coche la checkbox position et on decoche la checkbox checkedposition
                 //on garde en memoire la checkbox et la position ==> checkedposition
 
-                if(checkedPosition < 0 && selectedRb == null){
+                if (checkedPosition < 0 && selectedRb == null) {
                     RadioButton rb = (RadioButton) v;
                     rb.setChecked(true);
                     POI p = POIList.get(position);
@@ -79,7 +93,7 @@ public class MyCustomPOIListAdapter extends ArrayAdapter<POI> {
                     selectedRb = rb;
                 }
 
-                if(position != checkedPosition){
+                if (position != checkedPosition) {
                     //uncheck
                     selectedRb.setChecked(false);
                     POIList.get(checkedPosition).setSelected(false);

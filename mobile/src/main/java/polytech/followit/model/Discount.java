@@ -7,10 +7,17 @@ public class Discount implements Parcelable {
 
     private String POIname;
     private String discountText;
+    private String poiImageB64;
 
     public Discount(String POIname, String discountText) {
         this.POIname = POIname;
         this.discountText = discountText;
+    }
+
+    public Discount(String POIname, String discountText, String poiImageB64) {
+        this.POIname = POIname;
+        this.discountText = discountText;
+        this.poiImageB64 = poiImageB64;
     }
 
     public String getPOIname() {
@@ -21,6 +28,10 @@ public class Discount implements Parcelable {
         return discountText;
     }
 
+    public String getPoiImageB64() {
+        return poiImageB64;
+    }
+
     //==============================================================================================
     // Parcelable implementation
     //==============================================================================================
@@ -28,12 +39,14 @@ public class Discount implements Parcelable {
     protected Discount(Parcel in) {
         POIname = in.readString();
         discountText = in.readString();
+        poiImageB64 = in.readString();
     }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(POIname);
         dest.writeString(discountText);
+        dest.writeString(poiImageB64);
     }
 
     @Override

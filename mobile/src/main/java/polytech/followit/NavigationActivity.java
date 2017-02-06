@@ -214,7 +214,7 @@ public class NavigationActivity extends FragmentActivity implements
             //si il y a des POI
             if (n.getPoi() != null && !n.getPoi().isEmpty()) {
                 for (POI s : n.getPoi()) {
-                    listDiscounts.add(new Discount(s.getName(), s.getDiscount()));
+                    listDiscounts.add(new Discount(s.getName(), s.getDiscount(),s.getImageB64()));
                 }
             }
 

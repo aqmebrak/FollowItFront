@@ -1,6 +1,10 @@
 package polytech.followit.adapter;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +35,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public void onBindViewHolder(RecyclerViewAdapter.MyViewHolder holder, int position) {
         holder.poi_name.setText(discountList.get(position).getPOIname());
         holder.discount_text.setText(discountList.get(position).getDiscountText());
+        //construction du bitmap pour l'image
+        Log.d("RECYCLER" , "test image");
+
+        if (discountList.get(position).getPoiImageB64() != null && !discountList.get(position).getPoiImageB64().isEmpty()) {
+            Log.d("RECYCLER" , "ON a une image");
+            String decodeString = discountList.get(position).getPoiImageB64();
+            decodeString =decodeString.replace("data:image/png;base64,","");
+            byte[] data = Base64.decode(decodeString, Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(data, 0, data.length);
+            holder.poi_image.setImageBitmap(decodedByte);
+        }
     }
 
 

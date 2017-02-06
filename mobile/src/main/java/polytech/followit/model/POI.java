@@ -9,21 +9,25 @@ public class POI implements Parcelable {
     private String name = null;
     private String node = null;
     private String discount = null;
+    private String imageB64 = null;
     private boolean selected = false;
 
-    public POI(String name, String node, String discount, boolean selected) {
+    public POI(String name, String node, String discount, String imageB64 , boolean selected) {
         super();
         this.name = name;
         this.node = node;
         this.discount = discount;
         this.selected = selected;
+        this.imageB64 = imageB64;
     }
 
-    public POI(String name, String node, boolean selected) {
+    public POI(String name, String node,  String imageB64 ,boolean selected) {
         super();
         this.name = name;
         this.node = node;
         this.selected = selected;
+        this.imageB64 = imageB64;
+
     }
 
     public String getName() {
@@ -50,6 +54,9 @@ public class POI implements Parcelable {
         return discount;
     }
 
+    public String getImageB64() {
+        return imageB64;
+    }
 
     //==============================================================================================
     // Parcelable implementation

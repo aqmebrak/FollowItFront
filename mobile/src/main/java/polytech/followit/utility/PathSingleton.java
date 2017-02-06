@@ -154,7 +154,8 @@ public class PathSingleton {
                     JSONObject currentPOI = (JSONObject) currentNode.getJSONArray("POIList").get(j);
                     String poi_name = currentPOI.getString("poi");
                     String poi_discount = currentPOI.has("discount") ? (String) currentPOI.get("discount") : "Pas de promotion pour ce magasin";
-                    POI poi = new POI(poi_name, node_name, poi_discount, false);
+                    String poi_imageB64 = currentPOI.has("image") ? (String) currentPOI.get("image") : null;
+                    POI poi = new POI(poi_name, node_name, poi_discount, poi_imageB64, false);
                     node_poi.add(poi);
                 }
 
@@ -162,7 +163,8 @@ public class PathSingleton {
                 String orientation = null;
                 if (i == 0) orientation = "DEPARTURE";
                 else if (i == arrayPath.length() - 1) orientation = "ARRIVAL";
-                else if (currentNode.has("orientation")) orientation = currentNode.getString("orientation");
+                else if (currentNode.has("orientation"))
+                    orientation = currentNode.getString("orientation");
                 node_instruction = new Instruction(null, null, currentNode.getString("instruction"), null, orientation);
                 listInstructions.add(node_instruction);
                 listOrientationInstructions.add(orientation);
@@ -204,7 +206,7 @@ public class PathSingleton {
             JSONArray arrayPOI = (JSONArray) response.get("poi");
             for (int i = 0; i < arrayPOI.length(); i++) {
                 JSONObject poi = (JSONObject) arrayPOI.get(i);
-                listAllPoi.add(new POI((String) poi.get("poi"), (String) poi.get("node"), false));
+                listAllPoi.add(new POI((String) poi.get("poi"), (String) poi.get("node"), poi.has("image") ? (String) poi.get("image") : null, false));
             }
         } catch (JSONException e) {
             e.printStackTrace();

@@ -15,6 +15,7 @@ import com.estimote.sdk.SystemRequirementsChecker;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -50,12 +51,11 @@ public class SelectArrivalActivity extends AppCompatActivity implements
 
         PathSingleton.getInstance().setSocketCallBack(this);
 
-        Intent intent= getIntent();
+        Intent intent = getIntent();
         Bundle b = intent.getExtras();
 
-        if(b!=null)
-        {
-            depart =(String) b.get("source");
+        if (b != null) {
+            depart = (String) b.get("source");
         }
         Log.d(TAG, depart);
 
@@ -63,9 +63,16 @@ public class SelectArrivalActivity extends AppCompatActivity implements
         Button getPathButton = (Button) findViewById(R.id.get_path_button);
         Button goBackButton = (Button) findViewById(R.id.go_back_button);
 
-        Log.d(TAG, "GET POI LIST");
-        //GET POI LIST
-        PathSingleton.getInstance().askPOIList();
+
+        ArrayList<POI> customPOIList = new ArrayList<>(PathSingleton.getInstance().getListAllPoi());
+        //copie la liste pour empecher les reference, et detruire un objet
+        for (POI p : customPOIList) {
+            if (p.getName().equals(depart)) {
+                customPOIList.remove(p);
+                break;
+            }
+        }
+        displayListView(customPOIList);
 
         // Set listeners
         getPathButton.setOnClickListener(this);
@@ -75,8 +82,6 @@ public class SelectArrivalActivity extends AppCompatActivity implements
         progressDialog.setMessage("Loading...");
         progressDialog.setIndeterminate(false);
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setCancelable(true);
-        progressDialog.show();
     }
 
 
@@ -105,7 +110,7 @@ public class SelectArrivalActivity extends AppCompatActivity implements
                 startActivity(mainIntent);
                 progressDialog.dismiss();
                 finish();
-            break;
+                break;
         }
     }
 
@@ -124,19 +129,7 @@ public class SelectArrivalActivity extends AppCompatActivity implements
 
     @Override
     public void onPOIListFetched() {
-        Log.d(TAG, "NOTIF: POI LIST" + PathSingleton.getInstance().getListAllPoi().toString());
-
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                //Liste Dropdown pour le départ
-
-                //Generate list View from ArrayList
-                displayListView(PathSingleton.getInstance().getListAllPoi());
-
-                progressDialog.hide();
-            }
-        });
+        //NOT USED
     }
 
     @Override
