@@ -36,12 +36,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.poi_name.setText(discountList.get(position).getPOIname());
         holder.discount_text.setText(discountList.get(position).getDiscountText());
         //construction du bitmap pour l'image
-        Log.d("RECYCLER" , "test image");
+        //Log.d("RECYCLER" , "test image");
 
         if (discountList.get(position).getPoiImageB64() != null && !discountList.get(position).getPoiImageB64().isEmpty()) {
-            Log.d("RECYCLER" , "ON a une image");
+            //Log.d("RECYCLER" , "ON a une image");
             String decodeString = discountList.get(position).getPoiImageB64();
-            decodeString =decodeString.replace("data:image/png;base64,","");
+            decodeString =decodeString.substring(decodeString.indexOf(","));
             byte[] data = Base64.decode(decodeString, Base64.DEFAULT);
             Bitmap decodedByte = BitmapFactory.decodeByteArray(data, 0, data.length);
             holder.poi_image.setImageBitmap(decodedByte);

@@ -14,7 +14,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 
@@ -44,18 +46,16 @@ public class NavigationActivity extends FragmentActivity implements
         SocketCallBack,
         NavigationFragment.OnFragmentInteractionListener,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, ServiceConnection {
+        GoogleApiClient.OnConnectionFailedListener,
+        ServiceConnection,
+        ViewPager.OnPageChangeListener {
 
     private static final String TAG = NavigationActivity.class.getSimpleName();
-    private Path path = PathSingleton.getInstance().getPath();
 
-    //recupere la liste en RAW de la navigation
-    ArrayList<Node> listNavigation = null;
-    //Instruction en cours
 
     private ViewPager mPager;
     private List<Instruction> mInstructionData = new ArrayList<>();
-    private NavigationFragmentAdapter mAdapter;
+    private Instruction currentInstruction;
 
     private GoogleApiClient googleApiClient;
 
@@ -76,7 +76,7 @@ public class NavigationActivity extends FragmentActivity implements
         PathSingleton.getInstance().setSocketCallBack(this);
 
         //Adapter pour créer toutes les vues du Pager
-        mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
+        NavigationFragmentAdapter mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mAdapter);
 
@@ -114,18 +114,16 @@ public class NavigationActivity extends FragmentActivity implements
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mPager.setAdapter(null);
-                mAdapter = null;
-                getSupportFragmentManager().getFragments().clear();
-                mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
-                mPager.setAdapter(mAdapter);
                 mInstructionData.clear();
+                mPager.setAdapter(null);
+                NavigationFragmentAdapter mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
+                mPager.setAdapter(mAdapter);
                 prepareNavigationList();
                 mAdapter.notifyDataSetChanged();
             }
         });
-        //syncDataWithService();
-        //syncDataWithWatch();
+        syncDataWithService();
+        syncDataWithWatch();
     }
 
 
@@ -148,15 +146,20 @@ public class NavigationActivity extends FragmentActivity implements
                 //on cherche l'étape active
                 Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
 
-                //Log.d(TAG, "source: " + ongoingInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
-                JSONObject o = new JSONObject();
-                try {
-                    o.put("source", mInstructionData.get(PathSingleton.getInstance().getPath().getIndexOfInstruction()).nodeToGoTo);
-                    o.put("destination", PathSingleton.getInstance().getPath().getDestination());
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                //SI l'user n'a pas selectionné l'arrivee, dans ce cas on demande le chemin a partir de l'inscrution actuellement affichee
+                if (currentInstruction.nodeToGoTo != null) {
+                    Log.d(TAG, "source: " + currentInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
+                    PathSingleton.getInstance().getPath().setSource("a");
+                    PathSingleton.getInstance().getPath().setDestination("b");
+                    JSONObject o = new JSONObject();
+                    try {
+                        o.put("source", currentInstruction.nodeToGoTo);
+                        o.put("destination", PathSingleton.getInstance().getPath().getDestination());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    PathSingleton.getInstance().askForPath(o);
                 }
-                PathSingleton.getInstance().askForPath(o);
             }
         });
     }
@@ -172,7 +175,7 @@ public class NavigationActivity extends FragmentActivity implements
      */
     @Override
     public void onSendNotificationRequest(String action) {
-        Log.d(TAG, "onSendNotificationRequest : " + action);
+        //Log.d(TAG, "onSendNotificationRequest : " + action);
         sendNotificationOnPhone(action);
         syncDataWithWatch();
     }
@@ -196,7 +199,7 @@ public class NavigationActivity extends FragmentActivity implements
 
     private void prepareNavigationList() {
         //ON PREPARE LA LISTE DES ETAPES
-        listNavigation = path.getListNodes();
+        ArrayList<Node> listNavigation = PathSingleton.getInstance().getPath().getListNodes();
         Log.d(TAG, "PREPARENAVIGATIONLIST");
         Log.d(TAG, listNavigation.toString());
 
@@ -214,17 +217,17 @@ public class NavigationActivity extends FragmentActivity implements
             //si il y a des POI
             if (n.getPoi() != null && !n.getPoi().isEmpty()) {
                 for (POI s : n.getPoi()) {
-                    listDiscounts.add(new Discount(s.getName(), s.getDiscount(),s.getImageB64()));
+                    listDiscounts.add(new Discount(s.getName(), s.getDiscount(), s.getImageB64()));
                 }
             }
 
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
             if (i < listNavigation.size() - 1) {
                 Node nplusun = listNavigation.get(i + 1);
-                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
+                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, PathSingleton.getInstance().getPath().getListNodes().get(i).getInstruction().getOrientation()));
             } else {
                 //sinon juste le noeud/beacon de ic_depart
-                mInstructionData.add(new Instruction(null, n.getName(), text, listDiscounts, path.getListNodes().get(i).getInstruction().getOrientation()));
+                mInstructionData.add(new Instruction(null, n.getName(), text, listDiscounts, PathSingleton.getInstance().getPath().getListNodes().get(i).getInstruction().getOrientation()));
             }
         }
     }
@@ -242,9 +245,9 @@ public class NavigationActivity extends FragmentActivity implements
         Intent in = new Intent();
         in.setAction(action);
 
-        int instructionIndex = path.getIndexOfInstruction();
-        String orientation = path.getListInstructions().get(instructionIndex).getOrientation();
-        in.putExtra("instruction", path.getListInstructions().get(instructionIndex).getInstruction());
+        int instructionIndex = PathSingleton.getInstance().getPath().getIndexOfInstruction();
+        String orientation = PathSingleton.getInstance().getPath().getListInstructions().get(instructionIndex).getOrientation();
+        in.putExtra("instruction", PathSingleton.getInstance().getPath().getListInstructions().get(instructionIndex).getInstruction());
         in.putExtra("icon", PathSingleton.determineOrientationIcon(orientation));
 
         sendBroadcast(in);
@@ -254,11 +257,11 @@ public class NavigationActivity extends FragmentActivity implements
     private void syncDataWithWatch() {
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
 
-        ArrayList<String> instructions = path.listInstructionsToStringArray();
-        ArrayList<String> listOrientation = path.getListOrientationInstructions();
-        Log.d(TAG, "list all orientations : " + path.getListOrientationInstructions());
+        ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();
+        ArrayList<String> listOrientation = PathSingleton.getInstance().getPath().getListOrientationInstructions();
+        Log.d(TAG, "list all orientations : " + PathSingleton.getInstance().getPath().getListOrientationInstructions());
         String timestamp = Long.toString(System.currentTimeMillis()); // To force the data to be updated
-        int indexOfInstruction = path.getIndexOfInstruction();
+        int indexOfInstruction = PathSingleton.getInstance().getPath().getIndexOfInstruction();
 
         putDataMapReq.getDataMap().putStringArrayList("instructions", instructions);
         putDataMapReq.getDataMap().putStringArrayList("listOrientation", listOrientation);
@@ -280,20 +283,37 @@ public class NavigationActivity extends FragmentActivity implements
 
     @Override
     public void onFragmentInteraction(int currentDataPosition) {
-
     }
 
     @Override
     public void onFragmentCreated(NavigationFragment navigationFragment) {
-        //Log.d("ViewPagerDemo", "Fragment inflated: " + navigationFragment.getData().instruction);
+
     }
 
     @Override
     public void onFragmentResumed(NavigationFragment navigationFragment) {
         //Log.d("ViewPagerDemo", "Fragment resumed: " + navigationFragment.getData().instruction);
+        Log.d(TAG, "INCREMENT INSTRUCTION INDEX");
+        currentInstruction = navigationFragment.getData();
     }
 
-    private class NavigationFragmentAdapter extends FragmentPagerAdapter {
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
+
+    private class NavigationFragmentAdapter extends FragmentStatePagerAdapter {
+
+
         NavigationFragmentAdapter(FragmentManager fm) {
             super(fm); // super tracks this
         }
@@ -309,11 +329,14 @@ public class NavigationActivity extends FragmentActivity implements
             return mInstructionData.size();
         }
 
+        //this is called when notifyDataSetChanged() is called
         @Override
         public int getItemPosition(Object object) {
-            Log.d(TAG, "getItemPosition");
-            return POSITION_NONE;
+            Log.d(TAG, "GETITEMPOSITION APPELAY");
+            // refresh all fragments when data set changed
+            return PagerAdapter.POSITION_NONE;
         }
+
     }
 
     //==============================================================================================

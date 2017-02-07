@@ -109,7 +109,7 @@ public class PathSingleton {
     //==============================================================================================
 
     public void askForPath(JSONObject param) {
-        Log.d(getInstance().TAG, "ASKING PATH SOCKET");
+        Log.d(getInstance().TAG, "ASKING PATH SOCKET" + param);
         getInstance().socket.emit("askPath", param);
     }
 
@@ -207,6 +207,8 @@ public class PathSingleton {
             for (int i = 0; i < arrayPOI.length(); i++) {
                 JSONObject poi = (JSONObject) arrayPOI.get(i);
                 listAllPoi.add(new POI((String) poi.get("poi"), (String) poi.get("node"), poi.has("image") ? (String) poi.get("image") : null, false));
+                //Log.d(TAG, "call: POI IMAGE" + (poi.has("image") ? (String) poi.get("image") : null));
+
             }
         } catch (JSONException e) {
             e.printStackTrace();

@@ -19,8 +19,9 @@
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/cast_album_art_placeholder"
         android:id="@+id/poi_list_image"
-        android:layout_marginStart="29dp"
-        android:layout_alignTop="@+id/radioButton"
-        android:layout_toEndOf="@+id/radioButton" />
+        android:maxHeight="75dp"
+        android:maxWidth="75dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
 
 </RelativeLayout>

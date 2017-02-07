@@ -56,21 +56,21 @@ public class MyCustomPOIListAdapter extends ArrayAdapter<POI> {
 
             holder = new ViewHolder();
             holder.name = (RadioButton) convertView.findViewById(R.id.radioButton);
-            if (POIList.get(position).getImageB64() != null && !POIList.get(position).getImageB64().isEmpty()) {
-                holder.poiImage = (ImageView) convertView.findViewById(R.id.poi_list_image);
-                Log.d("RECYCLER", "ON a une image");
-                String decodeString = POIList.get(position).getImageB64();
-                decodeString = decodeString.replace("data:image/png;base64,", "");
-                byte[] data = Base64.decode(decodeString, Base64.DEFAULT);
-                Bitmap decodedByte = BitmapFactory.decodeByteArray(data, 0, data.length);
-                holder.poiImage.setImageBitmap(decodedByte);
-            }
+
             convertView.setTag(holder);
 
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
+        if (POIList.get(position).getImageB64() != null && !POIList.get(position).getImageB64().isEmpty()) {
+            holder.poiImage = (ImageView) convertView.findViewById(R.id.poi_list_image);
+            String decodeString = POIList.get(position).getImageB64();
+            decodeString = decodeString.substring(decodeString.indexOf(",") + 1);
 
+            byte[] data = Base64.decode(decodeString, Base64.DEFAULT);
+            Bitmap decodedByte = BitmapFactory.decodeByteArray(data, 0, data.length);
+            holder.poiImage.setImageBitmap(decodedByte);
+        }
         POI poi = POIList.get(position);
         holder.name.setText(poi.getName());
         holder.name.setChecked(poi.isSelected());

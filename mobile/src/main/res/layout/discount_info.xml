@@ -21,10 +21,10 @@
                 android:id="@+id/poi_image"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:maxHeight="200dp"
+                android:maxHeight="150dp"
                 android:adjustViewBounds="true"
                 android:layout_weight="1"
-                android:background="#FFFFFF" />
+                android:background="#E8EAF6" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -37,14 +37,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="TextView"
-                    android:textAppearance="@android:style/TextAppearance.Material.Title" />
+                    android:textAppearance="@android:style/TextAppearance.Material.Title"
+                    android:padding="8dp" />
 
                 <TextView
                     android:id="@+id/discount_text"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:text="TextView"
-                    android:textAppearance="@android:style/TextAppearance.Material.Body1" />
+                    android:textAppearance="@android:style/TextAppearance.Material.Body1"
+                    android:padding="8dp" />
 
             </LinearLayout>
 

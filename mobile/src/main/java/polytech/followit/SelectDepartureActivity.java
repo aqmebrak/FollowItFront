@@ -18,6 +18,7 @@ import com.estimote.sdk.SystemRequirementsChecker;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import polytech.followit.adapter.MyCustomPOIListAdapter;
 import polytech.followit.model.POI;
@@ -118,10 +119,9 @@ public class SelectDepartureActivity extends AppCompatActivity implements
             case R.id.nextButton:
                 Log.d(TAG, "click " + getSelectedRadioButton());
                 progressDialog.dismiss();
-                if(getSelectedRadioButton() != null){
+                if(!Objects.equals(getSelectedRadioButton(), "")){
                     Intent mainIntent = new Intent(SelectDepartureActivity.this, SelectArrivalActivity.class);
                     mainIntent.putExtra("source", getSelectedRadioButton());
-
                     startActivity(mainIntent);
                     finish();
                 }else{
