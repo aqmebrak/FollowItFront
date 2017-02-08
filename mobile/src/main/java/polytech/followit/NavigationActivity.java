@@ -14,7 +14,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.PagerAdapter;
@@ -38,7 +37,6 @@ import polytech.followit.model.Discount;
 import polytech.followit.model.Instruction;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
-import polytech.followit.model.Path;
 import polytech.followit.rest.SocketCallBack;
 import polytech.followit.service.BeaconMonitoringService;
 import polytech.followit.utility.PathSingleton;
@@ -81,9 +79,11 @@ public class NavigationActivity extends FragmentActivity implements
         NavigationFragmentAdapter mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
         mPager = (ViewPager) findViewById(R.id.pager);
         mPager.setAdapter(mAdapter);
-
+        mPager.addOnPageChangeListener(this);
         //rempli les instructions sur chaque fragment
         prepareNavigationList();
+        currentInstruction = mInstructionData.get(0);
+
 
         //lancement de laffichage en notifiant qu'on a construit les vues
         mAdapter.notifyDataSetChanged();
@@ -149,11 +149,11 @@ public class NavigationActivity extends FragmentActivity implements
                 Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
 
                 //SI l'user n'a pas selectionné l'arrivee, dans ce cas on demande le chemin a partir de l'inscrution actuellement affichee
-                if (currentInstruction.nodeToGoTo != null) {
-                    Log.d(TAG, "source: " + currentInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
+                if (currentInstruction.nodeFrom != null) {
+                    Log.d(TAG, "source: " + currentInstruction.nodeFrom + " dest " + PathSingleton.getInstance().getPath().getDestination());
                     JSONObject o = new JSONObject();
                     try {
-                        o.put("source", currentInstruction.nodeToGoTo);
+                        o.put("source", currentInstruction.nodeFrom);
                         o.put("destination", PathSingleton.getInstance().getPath().getDestination());
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -233,11 +233,11 @@ public class NavigationActivity extends FragmentActivity implements
             Node n = listNavigation.get(i);
             String text = "";
 
-                //si il y a des instructions
-                if (!"".equals(n.getInstruction().getInstruction())) {
-                    text += n.getInstruction().getInstruction() + "\n";
-                }
-            if(i != 0) {
+            //si il y a des instructions
+            if (!"".equals(n.getInstruction().getInstruction())) {
+                text += n.getInstruction().getInstruction() + "\n";
+            }
+            if (i != 0) {
 
                 //si il y a des POI
                 if (n.getPoi() != null && !n.getPoi().isEmpty()) {
@@ -245,9 +245,9 @@ public class NavigationActivity extends FragmentActivity implements
                         listDiscounts.add(new Discount(s.getName(), s.getDiscount(), s.getImageB64()));
                     }
                 }
-            }else {
+            } else {
                 //CAS DU NOEUD DE DEPART
-                Node nplusun = listNavigation.get(i+1);
+                Node nplusun = listNavigation.get(i + 1);
                 //si il y a des POI
                 if (nplusun.getPoi() != null && !nplusun.getPoi().isEmpty()) {
                     for (POI s : nplusun.getPoi()) {
@@ -258,11 +258,10 @@ public class NavigationActivity extends FragmentActivity implements
 
             //SI on est pas arrivé a la fin du tableau, on rentre le noeud/beacon ou on va arriver
             if (i < listNavigation.size() - 1) {
-                Node nplusun = listNavigation.get(i + 1);
-                mInstructionData.add(new Instruction(n.getName(), nplusun.getName(), text, listDiscounts, PathSingleton.getInstance().getPath().getListNodes().get(i).getInstruction().getOrientation()));
+                mInstructionData.add(new Instruction(n.getName(), text, listDiscounts, PathSingleton.getInstance().getPath().getListNodes().get(i).getInstruction().getOrientation()));
             } else {
                 //sinon juste le noeud/beacon de ic_depart
-                mInstructionData.add(new Instruction(null, n.getName(), text, listDiscounts, PathSingleton.getInstance().getPath().getListNodes().get(i).getInstruction().getOrientation()));
+                mInstructionData.add(new Instruction(n.getName(), text, listDiscounts, PathSingleton.getInstance().getPath().getListNodes().get(i).getInstruction().getOrientation()));
             }
         }
     }
@@ -319,7 +318,8 @@ public class NavigationActivity extends FragmentActivity implements
     @Override
     public void onStop() {
         super.onStop();
-        unbindService(this);
+        if (isServiceBounded)
+            unbindService(this);
     }
 
     @Override
@@ -333,8 +333,6 @@ public class NavigationActivity extends FragmentActivity implements
 
     @Override
     public void onFragmentResumed(NavigationFragment navigationFragment) {
-        //Log.d("ViewPagerDemo", "Fragment resumed: " + navigationFragment.getData().instruction);
-        currentInstruction = navigationFragment.getData();
     }
 
     @Override
@@ -344,6 +342,8 @@ public class NavigationActivity extends FragmentActivity implements
 
     @Override
     public void onPageSelected(int position) {
+        Log.d(TAG, "PAGE SELECTED:" + position);
+        currentInstruction = mInstructionData.get(position);
     }
 
     @Override

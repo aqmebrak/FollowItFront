@@ -8,7 +8,6 @@ import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Objects;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -178,7 +177,7 @@ public class PathSingleton {
                 else if (i == arrayPath.length() - 1) orientation = "ARRIVAL";
                 else if (currentNode.has("orientation"))
                     orientation = currentNode.getString("orientation");
-                node_instruction = new Instruction(null, null, currentNode.getString("instruction"), null, orientation);
+                node_instruction = new Instruction(null, currentNode.getString("instruction"), null, orientation);
                 listInstructions.add(node_instruction);
                 listOrientationInstructions.add(orientation);
 

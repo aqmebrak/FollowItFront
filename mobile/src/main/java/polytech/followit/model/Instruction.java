@@ -8,17 +8,14 @@ import java.util.ArrayList;
 
 public class Instruction implements Parcelable {
 
-    public String nodeToGoTo;
     public String nodeFrom;
     public String instruction;
     private String orientation;
     public ArrayList<Discount> discountList;
 
-    public Instruction(@Nullable String nodeToGoTo,
-                       @Nullable String nodeFrom, String instruction,
+    public Instruction(@Nullable String nodeFrom, String instruction,
                        @Nullable ArrayList<Discount> discountList,
                        @Nullable String orientation) {
-        this.nodeToGoTo = nodeToGoTo;
         this.nodeFrom = nodeFrom;
         this.instruction = instruction;
         this.orientation = orientation;
@@ -38,7 +35,6 @@ public class Instruction implements Parcelable {
     //==============================================================================================
 
     protected Instruction(Parcel in) {
-        nodeToGoTo = in.readString();
         nodeFrom = in.readString();
         instruction = in.readString();
         discountList = in.createTypedArrayList(Discount.CREATOR);
@@ -46,7 +42,6 @@ public class Instruction implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(nodeToGoTo);
         dest.writeString(nodeFrom);
         dest.writeString(instruction);
         dest.writeTypedList(discountList);
@@ -72,7 +67,6 @@ public class Instruction implements Parcelable {
     @Override
     public String toString() {
         return "Instruction{" +
-                "nodeToGoTo='" + nodeToGoTo + '\'' +
                 ", nodeFrom='" + nodeFrom + '\'' +
                 ", instruction='" + instruction + '\'' +
                 ", discountList=" + discountList +

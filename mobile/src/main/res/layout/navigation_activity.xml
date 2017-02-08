@@ -48,7 +48,7 @@
                 android:id="@+id/instructions_textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
+                android:layout_gravity="center_vertical|center"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:text="Depart"
