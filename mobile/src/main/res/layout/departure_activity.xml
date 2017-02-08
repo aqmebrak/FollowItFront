@@ -33,7 +33,9 @@
                 android:layout_alignParentTop="true"
                 android:text="Choisissez votre lieu de départ"
                 android:textAlignment="center"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:paddingBottom="16dp"
+                android:paddingTop="8dp" />
 
             <ListView
                 android:id="@+id/poi_list_departure"

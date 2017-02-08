@@ -72,6 +72,11 @@ public class SelectDepartureActivity extends AppCompatActivity implements
         SystemRequirementsChecker.checkWithDefaultDialogs(this);
     }
 
+    @Override
+    protected  void onStop(){
+        super.onStop();
+        progressDialog.dismiss();
+    }
 
     //==============================================================================================
     // Listeners implementations

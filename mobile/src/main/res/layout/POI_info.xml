@@ -21,6 +21,7 @@
         android:id="@+id/poi_list_image"
         android:maxHeight="75dp"
         android:maxWidth="75dp"
+        android:adjustViewBounds="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true" />
 

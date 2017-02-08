@@ -72,8 +72,8 @@ public class NavigationActivity extends FragmentActivity implements
         super.onCreate(savedInstanceState);
         Log.d(TAG, "ON create - Navigation Activity");
         setContentView(R.layout.navigation_view_pager);
-
         PathSingleton.getInstance().setSocketCallBack(this);
+
 
         //Adapter pour créer toutes les vues du Pager
         NavigationFragmentAdapter mAdapter = new NavigationFragmentAdapter(getSupportFragmentManager());
@@ -149,8 +149,6 @@ public class NavigationActivity extends FragmentActivity implements
                 //SI l'user n'a pas selectionné l'arrivee, dans ce cas on demande le chemin a partir de l'inscrution actuellement affichee
                 if (currentInstruction.nodeToGoTo != null) {
                     Log.d(TAG, "source: " + currentInstruction.nodeToGoTo + " dest " + PathSingleton.getInstance().getPath().getDestination());
-                    PathSingleton.getInstance().getPath().setSource("a");
-                    PathSingleton.getInstance().getPath().setDestination("b");
                     JSONObject o = new JSONObject();
                     try {
                         o.put("source", currentInstruction.nodeToGoTo);
@@ -282,6 +280,12 @@ public class NavigationActivity extends FragmentActivity implements
     //==============================================================================================
 
     @Override
+    public void onStop(){
+        super.onStop();
+        unbindService(this);
+    }
+
+    @Override
     public void onFragmentInteraction(int currentDataPosition) {
     }
 
@@ -293,7 +297,6 @@ public class NavigationActivity extends FragmentActivity implements
     @Override
     public void onFragmentResumed(NavigationFragment navigationFragment) {
         //Log.d("ViewPagerDemo", "Fragment resumed: " + navigationFragment.getData().instruction);
-        Log.d(TAG, "INCREMENT INSTRUCTION INDEX");
         currentInstruction = navigationFragment.getData();
     }
 
@@ -332,7 +335,7 @@ public class NavigationActivity extends FragmentActivity implements
         //this is called when notifyDataSetChanged() is called
         @Override
         public int getItemPosition(Object object) {
-            Log.d(TAG, "GETITEMPOSITION APPELAY");
+            //Log.d(TAG, "GETITEMPOSITION APPELAY");
             // refresh all fragments when data set changed
             return PagerAdapter.POSITION_NONE;
         }

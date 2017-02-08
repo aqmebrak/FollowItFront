@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.estimote.sdk.SystemRequirementsChecker;
 
@@ -89,8 +90,14 @@ public class SelectArrivalActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         //On réaffiche le bouton au lieu du progressba
-
+        PathSingleton.getInstance().setSocketCallBack(this);
         SystemRequirementsChecker.checkWithDefaultDialogs(this);
+    }
+
+    @Override
+    protected  void onStop(){
+        super.onStop();
+        progressDialog.dismiss();
     }
 
     //==============================================================================================
@@ -102,8 +109,12 @@ public class SelectArrivalActivity extends AppCompatActivity implements
         switch (view.getId()) {
             case R.id.get_path_button:
                 Log.d(TAG, "click");
-                progressDialog.show();
-                onPathClicked();
+                if (!Objects.equals(getSelectedRadioButton(), "")) {
+                    progressDialog.show();
+                    onPathClicked();
+                } else {
+                    Toast.makeText(this, "Veuillez choisir un point d'arrivée", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.go_back_button:
                 Intent mainIntent = new Intent(SelectArrivalActivity.this, SelectDepartureActivity.class);
