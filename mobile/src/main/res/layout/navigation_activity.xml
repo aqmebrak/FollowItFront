@@ -41,7 +41,8 @@
                 android:background="#FF283593"
                 android:padding="12dp"
                 app:srcCompat="@drawable/ic_arrival"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical" />
 
             <TextView
                 android:id="@+id/instructions_textView"
@@ -50,11 +51,12 @@
                 android:layout_gravity="center_vertical"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
-                android:text="Vous etes arrivé !"
+                android:text="Depart"
                 android:textAlignment="center"
                 android:textColorLink="?attr/colorBackgroundFloating"
                 android:textSize="18sp"
-                android:layout_weight="20" />
+                android:layout_weight="20"
+                android:gravity="fill_vertical" />
         </LinearLayout>
 
     </android.support.v7.widget.CardView>

@@ -32,6 +32,7 @@ import io.socket.emitter.Emitter;
 import polytech.followit.model.Node;
 import polytech.followit.model.POI;
 import polytech.followit.model.Path;
+import polytech.followit.utility.PathSingleton;
 
 public class BeaconMonitoringService extends Service implements
         BeaconManager.MonitoringListener,
@@ -45,6 +46,7 @@ public class BeaconMonitoringService extends Service implements
     private Socket socket;
     public static Path path;
     private boolean isStarted = false;
+    private polytech.followit.model.Beacon lastBeaconDetected = new polytech.followit.model.Beacon(null, null, 0, 0);
 
 
     @Override
@@ -52,7 +54,7 @@ public class BeaconMonitoringService extends Service implements
         super.onCreate();
         Log.d(TAG, "ON CREATE SERVICE");
         beaconManager = new BeaconManager(getApplicationContext());
-        beaconManager.setBackgroundScanPeriod(1000, 5000);
+        beaconManager.setBackgroundScanPeriod(1000, 2000);
         beaconManager.setRegionExitExpiration(5000);
 
         beaconManager.connect(this);
@@ -123,22 +125,36 @@ public class BeaconMonitoringService extends Service implements
         }
 
         for (polytech.followit.model.Beacon beacon : listDetectedBeacon) {
-            // Beacon not in our path
-            if (!path.getListBeacons().contains(beacon)) {
-                Log.d(TAG, "detected beacon :" + beacon + " not in our path. Source node : " + path.getSource());
-                Bundle msg_data = new Bundle();
-                msg_data.putString("source", path.getSource());
-                msg_data.putString("destination", path.getDestination());
-                sendMessage(MessageHandler.MSG_ASK_NEW_PATH, msg_data);
-            }
-            // Beacon detected in our path
-            else {
-                Log.d(TAG, "We detected a beacon in our path");
-                // If the detected beacon is the arrival one
-                if (isArrivalBeacon(beacon)) sendMessage(MessageHandler.MSG_ARRIVED_TO_DESTINATION, null);
-                else sendMessage(MessageHandler.MSG_NEXT_INSTRUCTION, null);
+            if (!lastBeaconDetected.equals(beacon)) {
+                lastBeaconDetected = beacon;
+                // Beacon not in our path
+                if (!path.getListBeacons().contains(beacon)) {
+                    Log.d(TAG, "detected beacon :" + beacon + " not in our path. Source node : " + path.getSource());
+                    Bundle msg_data = new Bundle();
+                    String newSource = getNodeofBeacon(beacon);
+                    msg_data.putString("source", newSource);
+                    msg_data.putString("destination", path.getDestination());
+                    sendMessage(MessageHandler.MSG_ASK_NEW_PATH, msg_data);
+                }
+                // Beacon detected in our path
+                else {
+                    Log.d(TAG, "We detected a beacon in our path");
+                    // If the detected beacon is the arrival one
+                    if (isArrivalBeacon(beacon))
+                        sendMessage(MessageHandler.MSG_ARRIVED_TO_DESTINATION, null);
+                    else sendMessage(MessageHandler.MSG_NEXT_INSTRUCTION, null);
+                }
             }
         }
+    }
+
+    private String getNodeofBeacon(polytech.followit.model.Beacon beacon) {
+        for (Node n : PathSingleton.getInstance().getPath().getListNodes()) {
+            if (n.getBeacon().equals(beacon)) {
+                return n.getName();
+            }
+        }
+        return "error";
     }
 
     @Override
@@ -156,7 +172,7 @@ public class BeaconMonitoringService extends Service implements
      */
     @Override
     public IBinder onBind(Intent intent) {
-        Toast.makeText(getApplicationContext(), "binding", Toast.LENGTH_SHORT).show();
+        // Toast.makeText(getApplicationContext(), "binding", Toast.LENGTH_SHORT).show();
         return messenger.getBinder();
     }
 
@@ -167,7 +183,6 @@ public class BeaconMonitoringService extends Service implements
         beaconManager.disconnect();
         //super.onDestroy();
     }
-
 
 
     //==============================================================================================

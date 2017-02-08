@@ -15,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import polytech.followit.adapter.RecyclerViewAdapter;
 import polytech.followit.model.Instruction;
 import polytech.followit.utility.PathSingleton;
@@ -87,6 +89,10 @@ public class NavigationFragment extends Fragment {
         icon = ContextCompat.getDrawable(getContext(), PathSingleton.determineOrientationIcon(mData.getOrientation()));
         orientation.setImageDrawable(icon);
 
+        if(mData.getInstruction().contains("Déplacez")){
+            TextView poiTitle = (TextView) v.findViewById(R.id.poi_title);
+            poiTitle.setText("Points d'interet à la prochaine intersection");
+        }
         if (mData != null) {
             instructionText.setText(mData.instruction);
 

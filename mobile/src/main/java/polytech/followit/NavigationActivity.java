@@ -233,15 +233,26 @@ public class NavigationActivity extends FragmentActivity implements
             Node n = listNavigation.get(i);
             String text = "";
 
-            //si il y a des instructions
-            if (!"".equals(n.getInstruction().getInstruction())) {
-                text += n.getInstruction().getInstruction() + "\n";
-            }
+                //si il y a des instructions
+                if (!"".equals(n.getInstruction().getInstruction())) {
+                    text += n.getInstruction().getInstruction() + "\n";
+                }
+            if(i != 0) {
 
-            //si il y a des POI
-            if (n.getPoi() != null && !n.getPoi().isEmpty()) {
-                for (POI s : n.getPoi()) {
-                    listDiscounts.add(new Discount(s.getName(), s.getDiscount(), s.getImageB64()));
+                //si il y a des POI
+                if (n.getPoi() != null && !n.getPoi().isEmpty()) {
+                    for (POI s : n.getPoi()) {
+                        listDiscounts.add(new Discount(s.getName(), s.getDiscount(), s.getImageB64()));
+                    }
+                }
+            }else {
+                //CAS DU NOEUD DE DEPART
+                Node nplusun = listNavigation.get(i+1);
+                //si il y a des POI
+                if (nplusun.getPoi() != null && !nplusun.getPoi().isEmpty()) {
+                    for (POI s : nplusun.getPoi()) {
+                        listDiscounts.add(new Discount(s.getName(), s.getDiscount(), s.getImageB64()));
+                    }
                 }
             }
 
