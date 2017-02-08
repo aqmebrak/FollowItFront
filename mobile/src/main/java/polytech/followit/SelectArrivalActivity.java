@@ -2,8 +2,10 @@ package polytech.followit;
 
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -95,7 +97,7 @@ public class SelectArrivalActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected  void onStop(){
+    protected void onStop() {
         super.onStop();
         progressDialog.dismiss();
     }
@@ -141,6 +143,27 @@ public class SelectArrivalActivity extends AppCompatActivity implements
     @Override
     public void onPOIListFetched() {
         //NOT USED
+    }
+
+    @Override
+    public void onInvalidPath() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressDialog.hide();
+                AlertDialog.Builder builder = new AlertDialog.Builder(SelectArrivalActivity.this);
+                builder.setMessage("Aucun chemin n'a pu etre trouvé  !")
+                        .setCancelable(false)
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                //do things
+                                dialog.dismiss();
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+        });
     }
 
     @Override

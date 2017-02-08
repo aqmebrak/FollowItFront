@@ -3,6 +3,7 @@ package polytech.followit;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
@@ -18,6 +19,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -166,6 +168,30 @@ public class NavigationActivity extends FragmentActivity implements
     public void onPOIListFetched() {
     }
 
+    @Override
+    public void onInvalidPath() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog.Builder builder = new AlertDialog.Builder(NavigationActivity.this);
+                builder.setMessage("Aucun chemin n'a pu etre trouvé  !")
+                        .setCancelable(false)
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                //do things
+                                dialog.dismiss();
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
+        });
+        Intent mainIntent = new Intent(NavigationActivity.this, SelectDepartureActivity.class);
+        startActivity(mainIntent);
+        finish();
+
+    }
+
     /**
      * Fired when the service needs to fire a notification
      *
@@ -280,7 +306,7 @@ public class NavigationActivity extends FragmentActivity implements
     //==============================================================================================
 
     @Override
-    public void onStop(){
+    public void onStop() {
         super.onStop();
         unbindService(this);
     }

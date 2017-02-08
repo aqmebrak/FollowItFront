@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -47,7 +48,9 @@ public class PathSingleton {
 
             @Override
             public void call(Object... args) {
-                buildPathWithNodes(args);
+                boolean isValid = checkIfValidPath(args);
+                if (isValid)
+                    buildPathWithNodes(args);
             }
 
         }).on("POIList", new Emitter.Listener() {
@@ -115,6 +118,16 @@ public class PathSingleton {
 
     public void askPOIList() {
         getInstance().socket.emit("getPOI");
+    }
+
+
+    private boolean checkIfValidPath(Object... args) {
+        JSONObject response = (JSONObject) args[0];
+        if (response.has("error")) {
+            getInstance().getSocketCallBack().onInvalidPath();
+            return false;
+        }
+        return true;
     }
 
     private void buildPathWithNodes(Object... args) {

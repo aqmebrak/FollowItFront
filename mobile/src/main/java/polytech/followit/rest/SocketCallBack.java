@@ -13,4 +13,5 @@ public interface SocketCallBack {
     void onPOIListFetched();
     void onSendNotificationRequest(String action);
     void onArrival();
+    void onInvalidPath();
 }

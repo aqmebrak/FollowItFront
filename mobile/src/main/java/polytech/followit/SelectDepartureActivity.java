@@ -93,6 +93,11 @@ public class SelectDepartureActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onInvalidPath(){
+
+    }
+
+    @Override
     public void onPOIListFetched() {
         Log.d(TAG, "NOTIF: POI LIST" + PathSingleton.getInstance().getListAllPoi().toString());
 
