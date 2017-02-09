@@ -55,14 +55,13 @@ public class NavigationActivity extends FragmentActivity implements
 
     private ViewPager mPager;
     private List<Instruction> mInstructionData = new ArrayList<>();
-    private Instruction currentInstruction;
 
     private GoogleApiClient googleApiClient;
 
     // Messenger
     private Messenger messenger = null;
     private boolean isServiceBounded;
-
+    AlertDialog alert;
     //==============================================================================================
     // Lifecycle
     //==============================================================================================
@@ -82,7 +81,6 @@ public class NavigationActivity extends FragmentActivity implements
         mPager.addOnPageChangeListener(this);
         //rempli les instructions sur chaque fragment
         prepareNavigationList();
-        currentInstruction = mInstructionData.get(0);
 
 
         //lancement de laffichage en notifiant qu'on a construit les vues
@@ -143,23 +141,34 @@ public class NavigationActivity extends FragmentActivity implements
                 // notificationID allows you to update the notification later on.
                 mNotificationManager.notify(1, mBuilder.build());
 
-                //TODO: ADD action on notification click
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(NavigationActivity.this);
+                builder.setMessage("Suite à une modification de notre part, nous avons mis à jour votre chemin !")
+                        .setCancelable(false)
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                //do things
+                                dialog.dismiss();
+                            }
+                        });
+                alert = builder.create();
+                alert.show();
+
+
                 //ON redemande le chemin
                 //on cherche l'étape active
                 Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
 
                 //SI l'user n'a pas selectionné l'arrivee, dans ce cas on demande le chemin a partir de l'inscrution actuellement affichee
-                if (currentInstruction.nodeFrom != null) {
-                    Log.d(TAG, "source: " + currentInstruction.nodeFrom + " dest " + PathSingleton.getInstance().getPath().getDestination());
-                    JSONObject o = new JSONObject();
-                    try {
-                        o.put("source", currentInstruction.nodeFrom);
-                        o.put("destination", PathSingleton.getInstance().getPath().getDestination());
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    PathSingleton.getInstance().askForPath(o);
+                Log.d(TAG, "source: " + mInstructionData.get(PathSingleton.getInstance().getPath().getIndexOfInstruction()).nodeFrom + " dest " + PathSingleton.getInstance().getPath().getDestination());
+                JSONObject o = new JSONObject();
+                try {
+                    o.put("source", mInstructionData.get(PathSingleton.getInstance().getPath().getIndexOfInstruction()).nodeFrom);
+                    o.put("destination", PathSingleton.getInstance().getPath().getDestination());
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
+                PathSingleton.getInstance().askForPath(o);
             }
         });
     }
@@ -182,13 +191,18 @@ public class NavigationActivity extends FragmentActivity implements
                                 dialog.dismiss();
                             }
                         });
-                AlertDialog alert = builder.create();
+                alert = builder.create();
                 alert.show();
             }
         });
         Intent mainIntent = new Intent(NavigationActivity.this, SelectDepartureActivity.class);
         startActivity(mainIntent);
         finish();
+    }
+
+    @Override
+    public void onDestroy() {
+        alert.dismiss();
     }
 
     /**
@@ -341,8 +355,6 @@ public class NavigationActivity extends FragmentActivity implements
 
     @Override
     public void onPageSelected(int position) {
-        Log.d(TAG, "PAGE SELECTED:" + position);
-        currentInstruction = mInstructionData.get(position);
     }
 
     @Override
