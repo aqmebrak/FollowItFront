@@ -154,10 +154,8 @@ public class NavigationActivity extends FragmentActivity implements
                 alert = builder.create();
                 alert.show();
 
-
                 //ON redemande le chemin
-                //on cherche l'étape active
-                Log.d(TAG, "dEBUT DEMANDE DE CHEMIN");
+                Log.d(TAG, "DEBUT DEMANDE DE CHEMIN");
 
                 //SI l'user n'a pas selectionné l'arrivee, dans ce cas on demande le chemin a partir de l'inscrution actuellement affichee
                 Log.d(TAG, "source: " + mInstructionData.get(PathSingleton.getInstance().getPath().getIndexOfInstruction()).nodeFrom + " dest " + PathSingleton.getInstance().getPath().getDestination());
@@ -214,6 +212,7 @@ public class NavigationActivity extends FragmentActivity implements
     @Override
     public void onSendNotificationRequest(String action) {
         //Log.d(TAG, "onSendNotificationRequest : " + action);
+        mPager.setCurrentItem(PathSingleton.getInstance().getPath().getIndexOfInstruction());
         sendNotificationOnPhone(action);
         syncDataWithWatch();
     }
@@ -357,6 +356,7 @@ public class NavigationActivity extends FragmentActivity implements
 
     @Override
     public void onPageSelected(int position) {
+
     }
 
     @Override
