@@ -189,7 +189,6 @@ public class NavigationActivity extends FragmentActivity implements
         Intent mainIntent = new Intent(NavigationActivity.this, SelectDepartureActivity.class);
         startActivity(mainIntent);
         finish();
-
     }
 
     /**

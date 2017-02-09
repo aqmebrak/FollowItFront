@@ -7,12 +7,14 @@ public class Beacon implements Parcelable {
 
     private String name, UUID;
     private int major, minor;
+    private String node;
 
-    public Beacon(String name, String UUID, int major, int minor) {
+    public Beacon(String name, String UUID, int major, int minor, String node) {
         this.name = name;
         this.UUID = UUID;
         this.major = major;
         this.minor = minor;
+        this.node = node;
     }
 
     protected Beacon(Parcel in) {
@@ -20,6 +22,7 @@ public class Beacon implements Parcelable {
         UUID = in.readString();
         major = in.readInt();
         minor = in.readInt();
+        node = in.readString();
     }
 
     public String getName() {
@@ -36,6 +39,10 @@ public class Beacon implements Parcelable {
 
     public int getMinor() {
         return minor;
+    }
+
+    public String getNode() {
+        return node;
     }
 
     @Override
@@ -96,5 +103,6 @@ public class Beacon implements Parcelable {
         dest.writeString(UUID);
         dest.writeInt(major);
         dest.writeInt(minor);
+        dest.writeString(node);
     }
 }

@@ -187,7 +187,8 @@ public class PathSingleton {
                             currentNode.getJSONObject("beacon").getString("name"),
                             currentNode.getJSONObject("beacon").getString("UUID"),
                             currentNode.getJSONObject("beacon").getInt("major"),
-                            currentNode.getJSONObject("beacon").getInt("minor")
+                            currentNode.getJSONObject("beacon").getInt("minor"),
+                            null
                     );
                     listBeacons.add(node_beacon);
                 } else node_beacon = null;

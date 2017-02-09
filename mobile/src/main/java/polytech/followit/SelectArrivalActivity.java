@@ -249,7 +249,7 @@ public class SelectArrivalActivity extends AppCompatActivity implements
 
             POI p = POIList.get(i);
             if (p.isSelected()) {
-                Log.d(TAG, "SELECTEDCHECKBOX :" + p.getName());
+                //Log.d(TAG, "SELECTEDCHECKBOX :" + p.getName());
                 selected = p.getName();
                 break;
             }

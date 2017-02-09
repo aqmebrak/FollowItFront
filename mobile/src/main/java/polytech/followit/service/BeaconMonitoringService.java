@@ -42,11 +42,11 @@ public class BeaconMonitoringService extends Service implements
     private Messenger messenger;
 
     private BeaconManager beaconManager;
-
+    private ArrayList<polytech.followit.model.Beacon> listAllBeacons;
     private Socket socket;
     public static Path path;
     private boolean isStarted = false;
-    private polytech.followit.model.Beacon lastBeaconDetected = new polytech.followit.model.Beacon(null, null, 0, 0);
+    private polytech.followit.model.Beacon lastBeaconDetected = new polytech.followit.model.Beacon(null, null, 0, 0, null);
 
 
     @Override
@@ -77,6 +77,7 @@ public class BeaconMonitoringService extends Service implements
 
             @Override
             public void call(Object... args) {
+
                 buildAllBeacons(args);
             }
         }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
@@ -120,7 +121,8 @@ public class BeaconMonitoringService extends Service implements
                     "beacon",
                     beacon.getProximityUUID().toString(),
                     beacon.getMajor(),
-                    beacon.getMinor()
+                    beacon.getMinor(),
+                    null
             ));
         }
 
@@ -129,9 +131,9 @@ public class BeaconMonitoringService extends Service implements
                 lastBeaconDetected = beacon;
                 // Beacon not in our path
                 if (!path.getListBeacons().contains(beacon)) {
-                    Log.d(TAG, "detected beacon :" + beacon + " not in our path. Source node : " + path.getSource());
-                    Bundle msg_data = new Bundle();
                     String newSource = getNodeofBeacon(beacon);
+                    Log.d(TAG, "detected beacon :" + beacon + " not in our path. Source node : " + newSource);
+                    Bundle msg_data = new Bundle();
                     msg_data.putString("source", newSource);
                     msg_data.putString("destination", path.getDestination());
                     sendMessage(MessageHandler.MSG_ASK_NEW_PATH, msg_data);
@@ -149,9 +151,10 @@ public class BeaconMonitoringService extends Service implements
     }
 
     private String getNodeofBeacon(polytech.followit.model.Beacon beacon) {
-        for (Node n : PathSingleton.getInstance().getPath().getListNodes()) {
-            if (n.getBeacon().equals(beacon)) {
-                return n.getName();
+        Log.d(TAG, listAllBeacons.toString());
+        for (polytech.followit.model.Beacon b : listAllBeacons) {
+            if (b.getMajor() == beacon.getMajor() && b.getMinor() == beacon.getMinor()) {
+                return b.getNode();
             }
         }
         return "error";
@@ -197,7 +200,7 @@ public class BeaconMonitoringService extends Service implements
      */
     private void buildAllBeacons(Object... args) {
         JSONObject response = (JSONObject) args[0];
-        ArrayList<polytech.followit.model.Beacon> listAllBeacons = new ArrayList<>();
+        listAllBeacons = new ArrayList<>();
         Log.d(TAG, "RESPONSE GETBEACONARRAY : " + response);
         try {
             JSONArray beaconsArray = response.getJSONArray("beaconArray");
@@ -207,7 +210,8 @@ public class BeaconMonitoringService extends Service implements
                 String UUID = beacon.getString("UUID");
                 int major = beacon.getInt("major");
                 int minor = beacon.getInt("minor");
-                listAllBeacons.add(new polytech.followit.model.Beacon(name, UUID, major, minor));
+                String node = beacon.getString("node");
+                listAllBeacons.add(new polytech.followit.model.Beacon(name, UUID, major, minor, node));
             }
             Log.d(TAG, "LIST ALL BEACONS : " + listAllBeacons.toString());
         } catch (JSONException e) {
