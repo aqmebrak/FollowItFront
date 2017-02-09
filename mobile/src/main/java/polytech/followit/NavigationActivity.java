@@ -202,7 +202,8 @@ public class NavigationActivity extends FragmentActivity implements
 
     @Override
     public void onDestroy() {
-        alert.dismiss();
+        super.onDestroy();
+        if (alert != null) alert.dismiss();
     }
 
     /**
@@ -302,6 +303,7 @@ public class NavigationActivity extends FragmentActivity implements
 
 
     private void syncDataWithWatch() {
+        Log.d(TAG, "SYNCDATA");
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create("/instructions");
 
         ArrayList<String> instructions = PathSingleton.getInstance().getPath().listInstructionsToStringArray();

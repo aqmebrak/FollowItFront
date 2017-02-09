@@ -147,13 +147,14 @@ public class PathSingleton {
 
         try {
             JSONObject response = (JSONObject) args[0];
-            Log.d(getInstance().TAG, "BUILD PATH WITH NODES RESPONSE : " + response);
+            Log.d(getInstance().TAG, "BUILD PATH WITH NODES RESPONSE : ");
             JSONArray arrayPath = response.getJSONArray("map");
             JSONObject currentNode;
 
             // Create nodes
             for (int i = 0; i < arrayPath.length(); i++) {
                 currentNode = arrayPath.getJSONObject(i);
+                Log.d(getInstance().TAG, currentNode.get("node").toString());
 
                 // name
                 node_name = currentNode.getString("node");
