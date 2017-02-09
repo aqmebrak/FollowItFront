@@ -15,6 +15,8 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.anton46.stepsview.StepsView;
+
 import org.w3c.dom.Text;
 
 import polytech.followit.adapter.RecyclerViewAdapter;
@@ -27,10 +29,14 @@ import polytech.followit.utility.PathSingleton;
  */
 public class NavigationFragment extends Fragment {
     private static final String ARG_DATA = "data";
+    private static final String ARG_POSITION = "position";
+    private static final String ARG_LABELS = "labels";
     private final String TAG = NavigationFragment.class.getSimpleName();
 
     //La classe qui contient les données à afficher
     private Instruction mData;
+    private int position;
+    private String[] labels;
     //L'adapter pour afficher le contenu de la liste
     RecyclerViewAdapter dataAdapter = null;
 
@@ -40,9 +46,11 @@ public class NavigationFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public static Fragment newInstance(Instruction instruction) {
+    public static Fragment newInstance(Instruction instruction, int position,String[] labels) {
         Bundle args = new Bundle();
         args.putParcelable(ARG_DATA, instruction);
+        args.putInt(ARG_POSITION, position);
+        args.putStringArray(ARG_LABELS, labels);
 
         Fragment f = new NavigationFragment();
         f.setArguments(args);
@@ -54,7 +62,9 @@ public class NavigationFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             mData = getArguments().getParcelable(ARG_DATA);
-            Log.d(TAG, "OnCreate - Navigation fragment : " + mData);
+            position = getArguments().getInt(ARG_POSITION);
+            labels = getArguments().getStringArray(ARG_LABELS);
+            Log.d(TAG, "OnCreate - Navigation fragment : " + mData + " " + position);
         }
     }
 
@@ -89,7 +99,16 @@ public class NavigationFragment extends Fragment {
         icon = ContextCompat.getDrawable(getContext(), PathSingleton.determineOrientationIcon(mData.getOrientation()));
         orientation.setImageDrawable(icon);
 
-        if(mData.getInstruction().contains("Déplacez")){
+        StepsView mStepsView = (StepsView) v.findViewById(R.id.stepsView);
+        mStepsView.setLabels(labels)
+                .setCompletedPosition(position % PathSingleton.getInstance().getPath().getListInstructions().size())
+                .setBarColorIndicator(ContextCompat.getColor(getContext(),R.color.gray))
+                .setProgressColorIndicator(ContextCompat.getColor(getContext(),R.color.progression))
+                .setLabelColorIndicator(ContextCompat.getColor(getContext(),R.color.progression))
+                .drawView();
+
+
+        if (mData.getInstruction().contains("Déplacez")) {
             TextView poiTitle = (TextView) v.findViewById(R.id.poi_title);
             poiTitle.setText("Points d'interet à la prochaine intersection");
         }

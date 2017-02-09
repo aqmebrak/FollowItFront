@@ -333,7 +333,7 @@ public class NavigationActivity extends FragmentActivity implements
     @Override
     public void onStop() {
         super.onStop();
-        if (isServiceBounded)
+        if (messenger != null)
             unbindService(this);
     }
 
@@ -366,14 +366,19 @@ public class NavigationActivity extends FragmentActivity implements
 
     private class NavigationFragmentAdapter extends FragmentStatePagerAdapter {
 
+        private String[] labels;
 
         NavigationFragmentAdapter(FragmentManager fm) {
             super(fm); // super tracks this
+            labels = new String[PathSingleton.getInstance().getPath().getListInstructions().size()];
+            for (int i = 0; i < labels.length; i++) {
+                labels[i] = "Etape " + (i + 1);
+            }
         }
 
         @Override
         public Fragment getItem(int position) {
-            return NavigationFragment.newInstance(mInstructionData.get(position));
+            return NavigationFragment.newInstance(mInstructionData.get(position), position, labels);
         }
 
         @Override

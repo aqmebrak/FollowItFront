@@ -7,4 +7,6 @@
     <color name="gray">#787677</color>
     <color name="navigationTextColor">#eaeaea</color>
     <color name="navigationBackgroundColor">#2b2829</color>
+    <color name="progression">#ff4081</color>
+
 </resources>
