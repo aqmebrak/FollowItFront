@@ -329,12 +329,6 @@ public class NavigationActivity extends FragmentActivity implements
     // Fragments implementation
     //==============================================================================================
 
-    @Override
-    public void onStop() {
-        super.onStop();
-        if (messenger != null)
-            unbindService(this);
-    }
 
     @Override
     public void onFragmentInteraction(int currentDataPosition) {

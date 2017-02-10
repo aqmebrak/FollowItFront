@@ -24,17 +24,18 @@ class MessageHandler extends Handler {
     public void handleMessage(Message msg) {
         switch (msg.what) {
             case MSG_ASK_NEW_PATH:
-                Log.d(TAG,"DANS LE MSG_ASK_NEW_PATH !");
+                Log.d(TAG, "DANS LE MSG_ASK_NEW_PATH !");
                 askNewPath(msg);
                 break;
             case MSG_NEXT_INSTRUCTION:
-                Log.d(TAG,"IN MSG_NEXT_INSTRUCTION");
+                Log.d(TAG, "IN MSG_NEXT_INSTRUCTION");
                 PathSingleton.getInstance().getPath().incrementIndexOfInstruction();
                 PathSingleton.getInstance().getSocketCallBack().onSendNotificationRequest("NEXT_INSTRUCTION");
                 break;
             case MSG_ARRIVED_TO_DESTINATION:
-                Log.d(TAG,"IN MSG_ARRIVED_TO_DESTINATION");
-                PathSingleton.getInstance().getPath().incrementIndexOfInstruction();
+                Log.d(TAG, "IN MSG_ARRIVED_TO_DESTINATION");
+                if (PathSingleton.getInstance().getPath().getIndexOfInstruction() < PathSingleton.getInstance().getPath().getListInstructions().size())
+                    PathSingleton.getInstance().getPath().incrementIndexOfInstruction();
                 PathSingleton.getInstance().getSocketCallBack().onSendNotificationRequest("ARRIVED_TO_DESTINATION");
                 PathSingleton.getInstance().getSocketCallBack().onArrival();
             default:
